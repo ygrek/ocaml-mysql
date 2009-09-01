@@ -1,6 +1,0 @@
-name="Mysql"
-version="1.0.3"
-description="Ocaml bindings to MySQL"
-requires=""
-archive(byte) = "mysql.cma"
-archive(native) = "mysql.cmxa"
