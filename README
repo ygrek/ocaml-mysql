@@ -1,0 +1,90 @@
+
+                                     
+                 OCamlMySQL -- MySQL access for OCaml
+                 *************************************
+                              Shawn Wagner
+                           shawnw@speakeasy.org
+                    http://raevnos.pennmush.org/ocaml/
+                    ===============================
+                         Based on a release by:
+                            Christian Lindig
+                           lindig@eecs.harvard.edu
+                     http://www.eecs.harvard.edu/~lindig 
+                   ==================================
+                                    
+  
+  ocaml-mysql is a package for ocaml that provides access to mysql 
+databases. It consists of low level functions implemented in C and a
+module Mysql intended for application development. 
+  
+
+1  Building
+*=*=*=*=*=*
+
+  
+  Compiling this package from sources requires the following software to
+be installed on your system:
+  
+   
+ 1. ocaml 3.09 or above.
+ 2. findlib  
+ 3. The mysql client library and header files.  
+ 4. An ANSI C compiler like gcc.
+  
+  A configure script is provided which should help to find the
+particular files. In case configure fails, edit the setting in the
+config file directly. This also applies when the C compiler fails to
+find some include file. However, you should first try the obvious:
+               
+              <<
+                    % ./configure
+                    % make
+                    % make opt
+                    % make install
+              >>
+  
+  This creates the mysql libraries.
+  
+2  Trouble Shooting
+*=*=*=*=*=*=*=*=*=*
+
+  
+  If compilation fails this is most probably because include or library
+files were not found. The configure looks in a number of places but may
+fail to find the files on your system. In case you have GNU Autoconf
+installed you can take a look at the configure.in and add more
+directories to search: 
+               
+              <<
+                AC_CHECKING(for MySQL header files)
+                dnl
+                dirs="/usr/local/include
+                      /usr/local/mysql/include
+                      /usr/include
+                      /usr/include/mysql"
+              >>
+  
+  Do not forget to create a new configure script by invoking autoconf.
+Please send a patch back to the author.
+  
+
+3. Documentation
+*=*=*=*=*=*=*=*=
+
+   
+   Check the interface files, or doc/index.html.
+  Reading the mysql documentation should help, too.
+  A small demo demo.ml is provided. You can try it in the mysqltop ocaml
+interpreter that make all should have built. 
+  
+
+  Note: The library can now be used in multithreaded ocaml programs without
+  blocking threads during i/o with the database server. However, only one
+  thread should use mysql functions. Better support for multi-threaded servers
+  using libmysqlclient_r coming someday.
+
+4  Copying
+*=*=*=*=*=
+
+  You are encouraged to distribute this code under the terms of the
+  Lesser GNU Public License. See the file COPYING for details.

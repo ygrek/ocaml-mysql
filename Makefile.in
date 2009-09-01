@@ -1,0 +1,19 @@
+export NO_CUSTOM=1
+
+SOURCES=mysql.mli mysql.ml mysql_stubs.c
+RESULT=mysql
+
+LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
+
+CFLAGS=@CFLAGS@ 
+CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
+export OCAMLMKLIB_FLAGS=@LDFLAGS@
+
+all: byte-code-library 
+opt: native-code-library
+reallyall: byte-code-library native-code-library
+install: libinstall
+uninstall: libuninstall
+
+-include OCamlMakefile
+
