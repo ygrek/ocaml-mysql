@@ -51,7 +51,7 @@
 #define DBDopen(x) (Field(x,2))
 #define RESval(x) (*(MYSQL_RES**)Data_custom_val(x))
 
-#define STMTval(x) ((MYSQL_STMT*)x)
+#define STMTval(x) (*(MYSQL_STMT**)Data_custom_val(x))
 #define ROWval(x) (*(row_t**)Data_custom_val(x))
 
 static void mysqlfailwith(char *err) Noreturn;
@@ -202,7 +202,7 @@ db_connect(value args)
                                ,NULL, 0);
     caml_leave_blocking_section();
     if (!mysql) {
-      mysqlfailwith(mysql_error(init));
+      mysqlfailwith((char*)mysql_error(init));
     } else {
       res = alloc_final(3, conn_finalize, 100,1000);
       Field(res, 1) = (value)mysql;
@@ -722,10 +722,30 @@ db_fetch_fields(value result) {
   CAMLreturn(out);
 }
 
+static void
+stmt_finalize(value stmt)
+{
+  caml_enter_blocking_section();
+  mysql_stmt_close(STMTval(stmt));
+  caml_leave_blocking_section();
+  Field(stmt,1) = 0;
+}
+
+struct custom_operations stmt_ops = {
+  "Mysql Prepared Statement",
+  stmt_finalize,
+  custom_compare_default,
+  custom_hash_default,
+  custom_serialize_default,
+  custom_deserialize_default
+};
+
+
 EXTERNAL value
 caml_mysql_stmt_prepare(value dbd, value sql)
 {
   CAMLparam2(dbd,sql);
+  CAMLlocal1(res);
   check_dbd(dbd, "P.prepare");
   caml_enter_blocking_section();
   MYSQL_STMT* stmt = mysql_stmt_init(DBDmysql(dbd));
@@ -738,7 +758,9 @@ caml_mysql_stmt_prepare(value dbd, value sql)
   caml_leave_blocking_section();
   if (ret)
     mysqlfailwith("P.prepare : mysql_stmt_prepare");
-  CAMLreturn(stmt);
+  res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 1, 10);
+  memcpy(Data_custom_val(res),&stmt,sizeof(MYSQL_STMT*));
+  CAMLreturn(res);
 }
 
 EXTERNAL value
@@ -748,6 +770,7 @@ caml_mysql_stmt_close(value stmt)
   caml_enter_blocking_section();
   my_bool ret = mysql_stmt_close(STMTval(stmt));
   caml_leave_blocking_section();
+  Field(stmt,1) = 0;
   if (ret)
     mysqlfailwith("mysql_stmt_close");
   CAMLreturn(Val_unit);
