@@ -814,7 +814,9 @@ value get_column(row_t* r, int index)
     str = caml_alloc_string(length);
     bind->buffer = String_val(str);
     bind->buffer_length = length;
-    mysql_stmt_fetch_column(r->stmt, r->bind, index, 0);
+    mysql_stmt_fetch_column(r->stmt, bind, index, 0);
+    bind->buffer = 0; // reset binding
+    bind->buffer_length = 0;
     CAMLreturn(Val_some(str));
   }
 
@@ -836,8 +838,6 @@ void destroy_row(row_t* r)
 static void
 stmt_result_finalize(value result)
 {
-  fprintf(stdout,"finalize");
-  fflush(stdout);
   row_t *row = ROWval(result);
   destroy_row(row);
 }
@@ -855,9 +855,10 @@ EXTERNAL value
 caml_mysql_stmt_execute(value stmt, value params)
 {
   CAMLparam2(stmt,params);
-  CAMLlocal1(res);
+  CAMLlocal2(res,v);
   int i = 0;
   int len = Wosize_val(params);
+  char * buf = 0;
   if (len != mysql_stmt_param_count(STMTval(stmt)))
     mysqlfailmsg("P.execute : Got %i parameters, but expected %u", len, mysql_stmt_param_count(STMTval(stmt)));
   row_t* row = create_row(STMTval(stmt), len);
@@ -870,7 +871,11 @@ caml_mysql_stmt_execute(value stmt, value params)
      * - mysql doesn't read MYSQL_BIND buffers after mysql_stmt_execute finishes
      * - parameter strings are fixed in memory i.e. no GC till mysql_stmt_execute finishes 
      * i.e. no enter/leave_blocking_section */
-    set_param(row,String_val(Field(params,i)),caml_string_length(Field(params,i)),i);
+    v = Field(params,i);
+    buf = String_val(v);
+    //buf = malloc(caml_string_length(v));
+    //memcpy(buf,String_val(v),caml_string_length(v));
+    set_param(row,buf,caml_string_length(v),i);
   }
   if (mysql_stmt_bind_param(STMTval(stmt), row->bind))
   {
