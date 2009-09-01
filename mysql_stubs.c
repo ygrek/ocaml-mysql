@@ -723,8 +723,16 @@ db_fetch_fields(value result) {
 }
 
 static void
+check_stmt(MYSQL_STMT* stmt, char *fun)
+{
+  if (!stmt) 
+    mysqlfailmsg("Mysql.P.%s called with closed statement", fun);
+}
+
+static void
 stmt_finalize(value stmt)
 {
+  if (!STMTval(stmt)) return;
   caml_enter_blocking_section();
   mysql_stmt_close(STMTval(stmt));
   caml_leave_blocking_section();
@@ -767,6 +775,7 @@ EXTERNAL value
 caml_mysql_stmt_close(value stmt)
 {
   CAMLparam1(stmt);
+  check_stmt(STMTval(stmt),"close");
   caml_enter_blocking_section();
   my_bool ret = mysql_stmt_close(STMTval(stmt));
   caml_leave_blocking_section();
@@ -879,6 +888,7 @@ caml_mysql_stmt_execute(value stmt, value params)
 {
   CAMLparam2(stmt,params);
   CAMLlocal2(res,v);
+  check_stmt(STMTval(stmt),"execute");
   int i = 0;
   int len = Wosize_val(params);
   int err = 0;
@@ -944,6 +954,7 @@ caml_mysql_stmt_fetch(value result)
   CAMLlocal1(arr);
   int i = 0;
   row_t* r = ROWval(result);
+  check_stmt(r->stmt,"fetch");
   caml_enter_blocking_section();
   int res = mysql_stmt_fetch(r->stmt);
   caml_leave_blocking_section();
