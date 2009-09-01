@@ -858,6 +858,7 @@ caml_mysql_stmt_execute(value stmt, value params)
   CAMLlocal2(res,v);
   int i = 0;
   int len = Wosize_val(params);
+  int err = 0;
   char * buf = 0;
   if (len != mysql_stmt_param_count(STMTval(stmt)))
     mysqlfailmsg("P.execute : Got %i parameters, but expected %u", len, mysql_stmt_param_count(STMTval(stmt)));
@@ -877,15 +878,17 @@ caml_mysql_stmt_execute(value stmt, value params)
     //memcpy(buf,String_val(v),caml_string_length(v));
     set_param(row,buf,caml_string_length(v),i);
   }
-  if (mysql_stmt_bind_param(STMTval(stmt), row->bind))
+  err = mysql_stmt_bind_param(STMTval(stmt), row->bind);
+  if (err)
   {
     destroy_row(row);
-    mysqlfailwith("P.execute : mysql_stmt_bind_param");
+    mysqlfailmsg("P.execute : mysql_stmt_bind_param = %i",err);
   }
-  if (mysql_stmt_execute(STMTval(stmt)))
+  err = mysql_stmt_execute(STMTval(stmt));
+  if (err)
   {
     destroy_row(row);
-    mysqlfailwith("P.execute : mysql_stmt_execute");
+    mysqlfailmsg("P.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(STMTval(stmt)));
   }
   destroy_row(row);
 
