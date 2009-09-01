@@ -706,3 +706,51 @@ db_fetch_fields(value result) {
   Field(out, 0) = fields;
   CAMLreturn(out);
 }
+
+EXTERNAL value
+caml_mysql_stmt_prepare(value dbd, value sql)
+{
+  CAMLparam2(dbd,sql);
+  check_dbd(dbd, "P.prepare");
+  caml_enter_blocking_section();
+  MYSQL_STMT* stmt = mysql_stmt_init(DBDmysql(dbd));
+  if (!stmt)
+  {
+    caml_leave_blocking_section();
+    mysqlfailwith("P.prepare : mysql_stmt_init");
+  }
+  int ret = mysql_stmt_prepare(stmt, String_val(sql), caml_string_length(sql));
+  caml_leave_blocking_section();
+  if (ret)
+    mysqlfailwith("P.prepare : mysql_stmt_prepare");
+  CAMLreturn(stmt);
+}
+
+EXTERNAL value
+caml_mysql_stmt_close(value stmt)
+{
+  CAMLparam1(stmt);
+  caml_enter_blocking_section();
+  my_bool ret = mysql_stmt_close(stmt);
+  caml_leave_blocking_section();
+  if (ret)
+    mysqlfailwith("mysql_stmt_close");
+  CAMLreturn(Val_unit);
+}
+
+EXTERNAL value
+caml_mysql_stmt_execute(value stmt, value params)
+{
+  CAMLparam2(stmt,params);
+  mysqlfailwith("P.execute");
+  CAMLreturn(Val_unit);
+}
+
+EXTERNAL value
+caml_mysql_stmt_fetch(value result)
+{
+  CAMLparam1(result);
+  mysqlfailwith("P.fetch");
+  CAMLreturn(Val_unit);
+}
+

@@ -302,4 +302,16 @@ val ml2timestampl   : year:int -> month:int -> day:int -> hour:int -> min:int ->
   SQL `insert ... values ( .. )' statements *)
 val values          : string list -> string
 
+(** Prepared statements with parameters *)
+module P : sig
+
+type stmt
+type result
+
+val prepare : dbd -> string -> stmt
+val execute : stmt -> string list -> result
+val fetch : result -> string option array option
+val close : stmt -> unit
+
+end
 

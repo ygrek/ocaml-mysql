@@ -605,3 +605,15 @@ let map_cols res ~key ~f =
   let col = column res in
   map res ~f:(function row -> f (Array.map key ~f:(function key -> col ~key ~row)))
 
+module P = struct
+
+type stmt
+type result
+
+external prepare : dbd -> string -> stmt = "caml_mysql_stmt_prepare"
+external execute : stmt -> string list -> result = "caml_mysql_stmt_execute"
+external fetch : result -> string option array option = "caml_mysql_stmt_fetch"
+external close : stmt -> unit = "caml_mysql_stmt_close"
+
+end
+
