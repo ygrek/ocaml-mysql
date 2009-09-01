@@ -51,6 +51,9 @@
 #define DBDopen(x) (Field(x,2))
 #define RESval(x) (*(MYSQL_RES**)Data_custom_val(x))
 
+#define STMTval(x) ((MYSQL_STMT*)x)
+#define ROWval(x) (*(row_t**)Data_custom_val(x))
+
 static void mysqlfailwith(char *err) Noreturn;
 static void mysqlfailmsg(const char *fmt, ...) Noreturn;
 
@@ -102,7 +105,7 @@ str_option(value v)
  */
  
 static value
-val_str_option(char* s, unsigned long length)
+val_str_option(const char* s, unsigned long length)
 {
   CAMLparam0();
   CAMLlocal2(res, v);
@@ -731,19 +734,114 @@ caml_mysql_stmt_close(value stmt)
 {
   CAMLparam1(stmt);
   caml_enter_blocking_section();
-  my_bool ret = mysql_stmt_close(stmt);
+  my_bool ret = mysql_stmt_close(STMTval(stmt));
   caml_leave_blocking_section();
   if (ret)
     mysqlfailwith("mysql_stmt_close");
   CAMLreturn(Val_unit);
 }
 
+typedef struct row_t_tag
+{
+  size_t count;
+  MYSQL_STMT* stmt; /* not owned */
+
+  MYSQL_BIND* bind;
+  unsigned long* length;
+  my_bool* error;
+  my_bool* is_null;
+} row_t;
+
+row_t* create_row(MYSQL_STMT* stmt, size_t count)
+{
+  row_t* row = malloc(sizeof(row_t));
+  if (row)
+  {
+    row->stmt = stmt;
+    row->count = count;
+    row->bind = calloc(count,sizeof(MYSQL_BIND));
+    row->error = calloc(count,sizeof(my_bool));
+    row->length = calloc(count,sizeof(unsigned long));
+    row->is_null = calloc(count,sizeof(my_bool));
+  }
+  return row;
+}
+
+void set_param(row_t *r, char* str, size_t len, int index)
+{
+  MYSQL_BIND* bind = &r->bind[index];
+
+  r->length[index] = len;
+  bind->length = &r->length[index];
+  bind->buffer_length = len;
+  bind->buffer_type = MYSQL_TYPE_STRING;
+  bind->buffer = (void*)str;
+}
+
+void destroy_row(row_t* r)
+{
+  if (r)
+  {
+    free(r->bind);
+    free(r->error);
+    free(r->length);
+    free(r->is_null);
+    free(r);
+  }
+}
+
+static void
+stmt_result_finalize(value result)
+{
+  fprintf(stdout,"finalize");
+  fflush(stdout);
+  row_t *row = ROWval(result);
+  destroy_row(row);
+}
+
+struct custom_operations stmt_result_ops = {
+  "Mysql Prepared Statement Results",
+  stmt_result_finalize,
+  custom_compare_default,
+  custom_hash_default,
+  custom_serialize_default,
+  custom_deserialize_default
+};
+
 EXTERNAL value
 caml_mysql_stmt_execute(value stmt, value params)
 {
   CAMLparam2(stmt,params);
-  mysqlfailwith("P.execute");
-  CAMLreturn(Val_unit);
+  CAMLlocal1(res);
+  int i = 0;
+  int len = Wosize_val(params);
+  if (len != mysql_stmt_param_count(STMTval(stmt)))
+    mysqlfailmsg("P.execute : Got %i parameters, but expected %u", len, mysql_stmt_param_count(STMTval(stmt)));
+  row_t* row = create_row(STMTval(stmt), len);
+  if (!row)
+    mysqlfailwith("P.execute : create_row");
+  for (i = 0; i < len; i++)
+  {
+    /* Quick and dirty. 
+     * Relies on the following :
+     * - mysql doesn't read MYSQL_BIND buffers after mysql_stmt_execute finishes
+     * - parameter strings are fixed in memory i.e. no GC till mysql_stmt_execute finishes 
+     * i.e. no enter/leave_blocking_section */
+    set_param(row,String_val(Field(params,i)),caml_string_length(Field(params,i)),i);
+  }
+  if (mysql_stmt_bind_param(STMTval(stmt), row->bind))
+  {
+    destroy_row(row);
+    mysqlfailwith("P.execute : mysql_stmt_bind_param");
+  }
+  if (mysql_stmt_execute(STMTval(stmt)))
+  {
+    destroy_row(row);
+    mysqlfailwith("P.execute : mysql_stmt_execute");
+  }
+  res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 1, 10);
+  memcpy(Data_custom_val(res),&row,sizeof(row_t*));
+  CAMLreturn(res);
 }
 
 EXTERNAL value

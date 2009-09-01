@@ -611,7 +611,7 @@ type stmt
 type result
 
 external prepare : dbd -> string -> stmt = "caml_mysql_stmt_prepare"
-external execute : stmt -> string list -> result = "caml_mysql_stmt_execute"
+external execute : stmt -> string array -> result = "caml_mysql_stmt_execute"
 external fetch : result -> string option array option = "caml_mysql_stmt_fetch"
 external close : stmt -> unit = "caml_mysql_stmt_close"
 

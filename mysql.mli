@@ -309,7 +309,7 @@ type stmt
 type result
 
 val prepare : dbd -> string -> stmt
-val execute : stmt -> string list -> result
+val execute : stmt -> string array -> result
 val fetch : result -> string option array option
 val close : stmt -> unit
 
