@@ -75,6 +75,18 @@ mysqlfailmsg(const char *fmt, ...) {
 
 }
 
+#define Val_none Val_int(0)
+
+static inline value
+Val_some( value v )
+{
+    CAMLparam1( v );
+    CAMLlocal1( some );
+    some = caml_alloc(1, 0);
+    Store_field( some, 0, v );
+    CAMLreturn( some );
+}
+
 static int
 int_option(value v)
 {
@@ -778,6 +790,37 @@ void set_param(row_t *r, char* str, size_t len, int index)
   bind->buffer = (void*)str;
 }
 
+void bind_result(row_t* r, int index)
+{
+  MYSQL_BIND* bind = &r->bind[index];
+
+  bind->buffer_type = MYSQL_TYPE_STRING;
+  bind->buffer = 0;
+  bind->buffer_length = 0;
+  bind->is_null = &r->is_null[index];
+  bind->length = &r->length[index];
+  bind->error = &r->error[index];
+}
+
+value get_column(row_t* r, int index)
+{
+  CAMLparam0();
+  CAMLlocal1(str);
+  unsigned long length = r->length[index];
+  MYSQL_BIND* bind = &r->bind[index];
+
+  if (length > 0)
+  {
+    str = caml_alloc_string(length);
+    bind->buffer = String_val(str);
+    bind->buffer_length = length;
+    mysql_stmt_fetch_column(r->stmt, r->bind, index, 0);
+    CAMLreturn(Val_some(str));
+  }
+
+  CAMLreturn(Val_none);
+}
+
 void destroy_row(row_t* r)
 {
   if (r)
@@ -819,7 +862,7 @@ caml_mysql_stmt_execute(value stmt, value params)
     mysqlfailmsg("P.execute : Got %i parameters, but expected %u", len, mysql_stmt_param_count(STMTval(stmt)));
   row_t* row = create_row(STMTval(stmt), len);
   if (!row)
-    mysqlfailwith("P.execute : create_row");
+    mysqlfailwith("P.execute : create_row for params");
   for (i = 0; i < len; i++)
   {
     /* Quick and dirty. 
@@ -839,6 +882,24 @@ caml_mysql_stmt_execute(value stmt, value params)
     destroy_row(row);
     mysqlfailwith("P.execute : mysql_stmt_execute");
   }
+  destroy_row(row);
+
+  len = mysql_stmt_field_count(STMTval(stmt));
+  row = create_row(STMTval(stmt), len);
+  if (!row)
+    mysqlfailwith("P.execute : create_row for results");
+  if (len)
+  {
+    for (i = 0; i < len; i++)
+    {
+      bind_result(row,i);
+    }
+    if (mysql_stmt_bind_result(STMTval(stmt), row->bind))
+    {
+      destroy_row(row);
+      mysqlfailwith("P.execute : mysql_stmt_bind_result");
+    }
+  }
   res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 1, 10);
   memcpy(Data_custom_val(res),&row,sizeof(row_t*));
   CAMLreturn(res);
@@ -848,7 +909,16 @@ EXTERNAL value
 caml_mysql_stmt_fetch(value result)
 {
   CAMLparam1(result);
-  mysqlfailwith("P.fetch");
-  CAMLreturn(Val_unit);
+  CAMLlocal1(arr);
+  int i = 0;
+  row_t* r = ROWval(result);
+  int res = mysql_stmt_fetch(r->stmt);
+  if (0 != res && MYSQL_DATA_TRUNCATED != res) CAMLreturn(Val_none);
+  arr = caml_alloc(r->count,0);
+  for (i = 0; i < r->count; i++)
+  {
+    Store_field(arr,i,get_column(r,i));
+  }
+  CAMLreturn(Val_some(arr));
 }
 
