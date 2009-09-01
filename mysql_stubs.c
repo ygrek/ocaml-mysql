@@ -859,38 +859,39 @@ caml_mysql_stmt_execute(value stmt, value params)
   int i = 0;
   int len = Wosize_val(params);
   int err = 0;
-  char * buf = 0;
+  char* bufs[256];
   if (len != mysql_stmt_param_count(STMTval(stmt)))
     mysqlfailmsg("P.execute : Got %i parameters, but expected %u", len, mysql_stmt_param_count(STMTval(stmt)));
+  if (len > 256)
+    mysqlfailwith("P.execute : too many parameters");
   row_t* row = create_row(STMTval(stmt), len);
   if (!row)
     mysqlfailwith("P.execute : create_row for params");
   for (i = 0; i < len; i++)
   {
-    /* Quick and dirty. 
-     * Relies on the following :
-     * - mysql doesn't read MYSQL_BIND buffers after mysql_stmt_execute finishes
-     * - parameter strings are fixed in memory i.e. no GC till mysql_stmt_execute finishes 
-     * i.e. no enter/leave_blocking_section */
     v = Field(params,i);
-    buf = String_val(v);
-    //buf = malloc(caml_string_length(v));
-    //memcpy(buf,String_val(v),caml_string_length(v));
-    set_param(row,buf,caml_string_length(v),i);
+    bufs[i] = malloc(caml_string_length(v));
+    memcpy(bufs[i],String_val(v),caml_string_length(v));
+    set_param(row,bufs[i],caml_string_length(v),i);
   }
   err = mysql_stmt_bind_param(STMTval(stmt), row->bind);
   if (err)
   {
     destroy_row(row);
+    for (i = 0; i < len; i++) free(bufs[i]);
     mysqlfailmsg("P.execute : mysql_stmt_bind_param = %i",err);
   }
+  caml_enter_blocking_section();
   err = mysql_stmt_execute(STMTval(stmt));
+  caml_leave_blocking_section();
   if (err)
   {
     destroy_row(row);
+    for (i = 0; i < len; i++) free(bufs[i]);
     mysqlfailmsg("P.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(STMTval(stmt)));
   }
   destroy_row(row);
+  for (i = 0; i < len; i++) free(bufs[i]);
 
   len = mysql_stmt_field_count(STMTval(stmt));
   row = create_row(STMTval(stmt), len);
@@ -920,7 +921,9 @@ caml_mysql_stmt_fetch(value result)
   CAMLlocal1(arr);
   int i = 0;
   row_t* r = ROWval(result);
+  caml_enter_blocking_section();
   int res = mysql_stmt_fetch(r->stmt);
+  caml_leave_blocking_section();
   if (0 != res && MYSQL_DATA_TRUNCATED != res) CAMLreturn(Val_none);
   arr = caml_alloc(r->count,0);
   for (i = 0; i < r->count; i++)
