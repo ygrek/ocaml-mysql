@@ -841,7 +841,12 @@ value get_column(row_t* r, int index)
   unsigned long length = r->length[index];
   MYSQL_BIND* bind = &r->bind[index];
 
-  if (length > 0)
+  if (*bind->is_null) CAMLreturn(Val_none);
+  if (0 == length)
+  {
+    str = caml_copy_string("");
+  }
+  else
   {
     str = caml_alloc_string(length);
     bind->buffer = String_val(str);
@@ -849,10 +854,9 @@ value get_column(row_t* r, int index)
     mysql_stmt_fetch_column(r->stmt, bind, index, 0);
     bind->buffer = 0; // reset binding
     bind->buffer_length = 0;
-    CAMLreturn(Val_some(str));
   }
 
-  CAMLreturn(Val_none);
+  CAMLreturn(Val_some(str));
 }
 
 void destroy_row(row_t* r)
