@@ -971,3 +971,19 @@ caml_mysql_stmt_fetch(value result)
   CAMLreturn(Val_some(arr));
 }
 
+EXTERNAL value
+caml_mysql_stmt_affected(value stmt) 
+{
+  CAMLparam1(stmt);
+  check_stmt(STMTval(stmt),"affected");
+  CAMLreturn(copy_int64(mysql_stmt_affected_rows(STMTval(stmt))));
+}
+
+EXTERNAL value
+caml_mysql_stmt_insert_id(value stmt) 
+{
+  CAMLparam1(stmt);
+  check_stmt(STMTval(stmt),"insert_id");
+  CAMLreturn(copy_int64(mysql_stmt_insert_id(STMTval(stmt))));
+}
+
