@@ -987,3 +987,11 @@ caml_mysql_stmt_insert_id(value stmt)
   CAMLreturn(copy_int64(mysql_stmt_insert_id(STMTval(stmt))));
 }
 
+EXTERNAL value
+caml_mysql_stmt_status(value stmt)
+{
+  CAMLparam1(stmt);
+  check_stmt(STMTval(stmt), "status");
+  CAMLreturn(Val_int(mysql_stmt_errno(STMTval(stmt))));
+}
+

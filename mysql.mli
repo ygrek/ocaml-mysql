@@ -312,6 +312,7 @@ val prepare : dbd -> string -> stmt
 val execute : stmt -> string array -> result
 val affected : stmt -> int64
 val insert_id : stmt -> int64
+val real_status : stmt -> int
 val fetch : result -> string option array option
 val close : stmt -> unit
 
