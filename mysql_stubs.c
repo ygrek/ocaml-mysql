@@ -765,7 +765,7 @@ caml_mysql_stmt_prepare(value dbd, value sql)
   int ret = mysql_stmt_prepare(stmt, String_val(sql), caml_string_length(sql));
   caml_leave_blocking_section();
   if (ret)
-    mysqlfailwith("P.prepare : mysql_stmt_prepare");
+    mysqlfailmsg("P.prepare : mysql_stmt_prepare = %i. Query : %s",ret,String_val(sql));
   res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 1, 10);
   memcpy(Data_custom_val(res),&stmt,sizeof(MYSQL_STMT*));
   CAMLreturn(res);
