@@ -303,12 +303,12 @@ val ml2timestampl   : year:int -> month:int -> day:int -> hour:int -> min:int ->
 val values          : string list -> string
 
 (** Prepared statements with parameters *)
-module P : sig
+module Prepared : sig
 
 type stmt
 type result
 
-val prepare : dbd -> string -> stmt
+val create : dbd -> string -> stmt
 val execute : stmt -> string array -> result
 val affected : stmt -> int64
 val insert_id : stmt -> int64

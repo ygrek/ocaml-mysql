@@ -605,12 +605,12 @@ let map_cols res ~key ~f =
   let col = column res in
   map res ~f:(function row -> f (Array.map key ~f:(function key -> col ~key ~row)))
 
-module P = struct
+module Prepared = struct
 
 type stmt
 type result
 
-external prepare : dbd -> string -> stmt = "caml_mysql_stmt_prepare"
+external create : dbd -> string -> stmt = "caml_mysql_stmt_prepare"
 external execute : stmt -> string array -> result = "caml_mysql_stmt_execute"
 external affected : stmt -> int64 = "caml_mysql_stmt_affected"
 external insert_id : stmt -> int64 = "caml_mysql_stmt_insert_id"
