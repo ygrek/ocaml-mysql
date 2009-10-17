@@ -274,8 +274,8 @@ db_select_db(value dbd, value newdb) {
   
   caml_enter_blocking_section();
   if (mysql_select_db(DBDmysql(dbd), String_val(newdb))) {
-    mysqlfailmsg("Mysql.select_db: %s", mysql_error(DBDmysql(dbd)));
     caml_leave_blocking_section();
+    mysqlfailmsg("Mysql.select_db: %s", mysql_error(DBDmysql(dbd)));
   }
   caml_leave_blocking_section();
   return Val_unit;
@@ -730,13 +730,14 @@ check_stmt(MYSQL_STMT* stmt, char *fun)
 }
 
 static void
-stmt_finalize(value stmt)
+stmt_finalize(value v_stmt)
 {
-  if (!STMTval(stmt)) return;
+  MYSQL_STMT* stmt = STMTval(v_stmt);
+  if (!stmt) return;
   caml_enter_blocking_section();
-  mysql_stmt_close(STMTval(stmt));
+  mysql_stmt_close(stmt);
   caml_leave_blocking_section();
-  Field(stmt,1) = 0;
+  Field(v_stmt,1) = 0;
 }
 
 struct custom_operations stmt_ops = {
@@ -754,18 +755,18 @@ caml_mysql_stmt_prepare(value dbd, value sql)
 {
   CAMLparam2(dbd,sql);
   CAMLlocal1(res);
-  check_dbd(dbd, "P.prepare");
+  check_dbd(dbd, "Mysql.Prepared.create");
   caml_enter_blocking_section();
   MYSQL_STMT* stmt = mysql_stmt_init(DBDmysql(dbd));
   if (!stmt)
   {
     caml_leave_blocking_section();
-    mysqlfailwith("P.prepare : mysql_stmt_init");
+    mysqlfailwith("Mysql.Prepared.create : mysql_stmt_init");
   }
   int ret = mysql_stmt_prepare(stmt, String_val(sql), caml_string_length(sql));
   caml_leave_blocking_section();
   if (ret)
-    mysqlfailmsg("P.prepare : mysql_stmt_prepare = %i. Query : %s",ret,String_val(sql));
+    mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s",ret,String_val(sql));
   res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 1, 10);
   memcpy(Data_custom_val(res),&stmt,sizeof(MYSQL_STMT*));
   CAMLreturn(res);
