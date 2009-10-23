@@ -24,9 +24,6 @@
 #include <mysql/errmsg.h>
 /* type 'a option = None | Some of 'a */
 
-#define NONE            Val_int(0)     
-#define SOME            0             
-
 #define EXTERNAL                /* dummy to highlight fn's exported to ML */
 
 /* Abstract types 
@@ -82,33 +79,35 @@ Val_some( value v )
 {
     CAMLparam1( v );
     CAMLlocal1( some );
-    some = caml_alloc(1, 0);
-    Store_field( some, 0, v );
+    some = caml_alloc_small(1, 0);
+    Field(some, 0) = v;
     CAMLreturn( some );
 }
+
+#define Some_val(v) Field(v,0)
 
 static int
 int_option(value v)
 {
-  if (v == NONE)
+  if (v == Val_none)
     return 0;
   else
-    return  Int_val(Field(v,SOME));
+    return  Int_val(Some_val(v));
 }
 
 
 /*
  * str_option gets a char* from an ML string option value.  Returns
- * NULL for NONE.
+ * NULL for None.
  */
 
 static char*
 str_option(value v)
 {
-  if (v == NONE)
+  if (v == Val_none)
     return (char*) NULL;
   else 
-    return String_val(Field(v,SOME));
+    return String_val(Some_val(v));
 }
 
 /*
@@ -120,35 +119,17 @@ static value
 val_str_option(const char* s, unsigned long length)
 {
   CAMLparam0();
-  CAMLlocal2(res, v);
+  CAMLlocal1(v);
 
   if (!s)
-    res = NONE;
-  else {
-    v = alloc_string(length);
+    CAMLreturn(Val_none);
+  else
+  {
+    v = caml_alloc_string(length);
     memcpy(String_val(v), s, length);
-    
-    res = alloc_small(1,SOME);
-    Field(res,0) = v; 
+
+    CAMLreturn(Val_some(v));
   }
-  CAMLreturn(res);
-}
-
-/*
- * val_some creates a (SOME v) from value v.
- */
-
-static value
-val_some(value some)
-{
-  CAMLparam1(some);
-  CAMLlocal2(res, v);
-        
-  v = some;
-  res = alloc_small(1,SOME);
-  Field(res,0) = v;
-
-  CAMLreturn(res);
 }
 
 /* check_dbd checks that the data base connection is still open.  The
@@ -157,7 +138,7 @@ val_some(value some)
 
 static void
 check_dbd(value dbd, char *fun)
-{        
+{
   if (!Bool_val(DBDopen(dbd))) 
     mysqlfailmsg("Mysql.%s called with closed connection", fun);
 }
@@ -233,7 +214,7 @@ db_change_user(value dbd, value args) {
 EXTERNAL value
 db_list_dbs(value dbd, value pattern, value blah) {
   CAMLparam3(dbd, pattern, blah);
-  CAMLlocal2(out, dbs);
+  CAMLlocal1(dbs);
   char *wild = str_option(pattern);
   int n, i;
   MYSQL_RES *res;
@@ -244,13 +225,13 @@ db_list_dbs(value dbd, value pattern, value blah) {
   caml_leave_blocking_section();
 
   if (!res)
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
 
   n = mysql_num_rows(res);
 
   if (n == 0) {
     mysql_free_result(res);
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
   }
 
   dbs = alloc_tuple(n); /* Array */
@@ -261,10 +242,7 @@ db_list_dbs(value dbd, value pattern, value blah) {
   }
 
   mysql_free_result(res);
-  out = alloc_small(1, SOME);
-  Field(out, 0) = dbs;
-  CAMLreturn(out);
-
+  CAMLreturn(Val_some(dbs));
 }
 
 EXTERNAL value
@@ -394,7 +372,7 @@ db_fetch (value result)
   
   row = mysql_fetch_row(res);
   if (!row) 
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
   
   /* create Some([| f1; f2; .. ;fn |]) */
   
@@ -405,7 +383,7 @@ db_fetch (value result)
     Store_field(fields, i, s);
   }
   
-  CAMLreturn(val_some(fields));
+  CAMLreturn(Val_some(fields));
 }
 
 EXTERNAL value
@@ -636,12 +614,12 @@ make_field(MYSQL_FIELD *f) {
   if (f->table)
     table = val_str_option(f->table, strlen(f->table));
   else
-    table = NONE;
+    table = Val_none;
 
   if (f->def)
     def = val_str_option(f->def, strlen(f->def));
   else
-    def = NONE;
+    def = Val_none;
 
   data = alloc_small(7, 0);
   Field(data, 0) = name;
@@ -654,7 +632,7 @@ make_field(MYSQL_FIELD *f) {
 
   CAMLreturn(data);
 }
-     
+
 EXTERNAL value
 db_fetch_field(value result) {
   CAMLparam1(result);
@@ -663,16 +641,14 @@ db_fetch_field(value result) {
   MYSQL_RES *res = RESval(result);
 
   if (!res)
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
 
   f = mysql_fetch_field(res);
   if (!f)
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
 
   field = make_field(f);
-  out = alloc_small(1, SOME);
-  Field(out, SOME) = field;
-  CAMLreturn(out);
+  CAMLreturn(Val_some(field));
 }
 
 EXTERNAL value
@@ -683,23 +659,21 @@ db_fetch_field_dir(value result, value pos) {
   MYSQL_RES *res = RESval(result);
 
   if (!res)
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
 
   f = mysql_fetch_field_direct(res, Long_val(pos));
   if (!f)
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
 
   field = make_field(f);
-  out = alloc_small(1, SOME);
-  Field(out, SOME) = field;
-  CAMLreturn(out);
+  CAMLreturn(Val_some(field));
 }
 
 
 EXTERNAL value
 db_fetch_fields(value result) {
   CAMLparam1(result);
-  CAMLlocal2(fields, out);
+  CAMLlocal1(fields);
   MYSQL_RES *res = RESval(result);
   MYSQL_FIELD *f;
   int i, n;
@@ -707,7 +681,7 @@ db_fetch_fields(value result) {
   n = mysql_num_fields(res);
 
   if (n == 0)
-    CAMLreturn(NONE);
+    CAMLreturn(Val_none);
 
   f = mysql_fetch_fields(res);
 
@@ -717,16 +691,14 @@ db_fetch_fields(value result) {
     Store_field(fields, i, make_field(f+i));
   }
 
-  out = alloc_small(1, SOME);
-  Field(out, 0) = fields;
-  CAMLreturn(out);
+  CAMLreturn(Val_some(fields));
 }
 
 static void
 check_stmt(MYSQL_STMT* stmt, char *fun)
 {
   if (!stmt) 
-    mysqlfailmsg("Mysql.P.%s called with closed statement", fun);
+    mysqlfailmsg("Mysql.Prepared.%s called with closed statement", fun);
 }
 
 static void
