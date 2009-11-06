@@ -871,9 +871,9 @@ caml_mysql_stmt_execute(value stmt, value params)
   int err = 0;
   char* bufs[256];
   if (len != mysql_stmt_param_count(STMTval(stmt)))
-    mysqlfailmsg("P.execute : Got %i parameters, but expected %u", len, mysql_stmt_param_count(STMTval(stmt)));
+    mysqlfailmsg("Prepared.execute : Got %i parameters, but expected %i", len, mysql_stmt_param_count(STMTval(stmt)));
   if (len > 256)
-    mysqlfailwith("P.execute : too many parameters");
+    mysqlfailwith("Prepared.execute : too many parameters");
   row_t* row = create_row(STMTval(stmt), len);
   if (!row)
     mysqlfailwith("P.execute : create_row for params");
@@ -894,14 +894,13 @@ caml_mysql_stmt_execute(value stmt, value params)
   caml_enter_blocking_section();
   err = mysql_stmt_execute(STMTval(stmt));
   caml_leave_blocking_section();
-  if (err)
-  {
-    destroy_row(row);
-    for (i = 0; i < len; i++) free(bufs[i]);
-    mysqlfailmsg("P.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(STMTval(stmt)));
-  }
+
   destroy_row(row);
   for (i = 0; i < len; i++) free(bufs[i]);
+  if (err)
+  {
+    mysqlfailmsg("P.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(STMTval(stmt)));
+  }
 
   len = mysql_stmt_field_count(STMTval(stmt));
   row = create_row(STMTval(stmt), len);
@@ -919,7 +918,7 @@ caml_mysql_stmt_execute(value stmt, value params)
       mysqlfailwith("P.execute : mysql_stmt_bind_result");
     }
   }
-  res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 1, 10);
+  res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 1, 100000);
   memcpy(Data_custom_val(res),&row,sizeof(row_t*));
   CAMLreturn(res);
 }
