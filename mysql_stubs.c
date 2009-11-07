@@ -728,17 +728,25 @@ caml_mysql_stmt_prepare(value dbd, value sql)
   CAMLparam2(dbd,sql);
   CAMLlocal1(res);
   check_dbd(dbd, "Mysql.Prepared.create");
+  MYSQL* db = DBDmysql(dbd);
+  char* sql_c = strdup(String_val(sql));
   caml_enter_blocking_section();
-  MYSQL_STMT* stmt = mysql_stmt_init(DBDmysql(dbd));
+  MYSQL_STMT* stmt = mysql_stmt_init(db);
   if (!stmt)
   {
     caml_leave_blocking_section();
+    free(sql_c);
     mysqlfailwith("Mysql.Prepared.create : mysql_stmt_init");
   }
-  int ret = mysql_stmt_prepare(stmt, String_val(sql), caml_string_length(sql));
-  caml_leave_blocking_section();
+  int ret = mysql_stmt_prepare(stmt, sql_c, strlen(sql_c));
+  free(sql_c);
   if (ret)
+  { 
+    mysql_stmt_close(stmt);
+    caml_leave_blocking_section();
     mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s",ret,String_val(sql));
+  }
+  caml_leave_blocking_section();
   res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 1, 10);
   memcpy(Data_custom_val(res),&stmt,sizeof(MYSQL_STMT*));
   CAMLreturn(res);
