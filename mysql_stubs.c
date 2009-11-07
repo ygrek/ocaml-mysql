@@ -147,9 +147,11 @@ check_dbd(value dbd, char *fun)
 static void
 conn_finalize(value dbd)
 {
-  if (Bool_val(DBDopen(dbd))) {
+  if (Bool_val(DBDopen(dbd))) 
+  {
+    MYSQL* db = DBDmysql(dbd);
     caml_enter_blocking_section();
-    mysql_close(DBDmysql(dbd));
+    mysql_close(db);
     caml_leave_blocking_section();
   }
 }
@@ -172,12 +174,13 @@ db_connect(value args)
   CAMLlocal1(res);
   MYSQL *init;
   MYSQL *mysql;
-        
+
   init = mysql_init(NULL);
   if (!init) {
     mysqlfailwith("connect failed");
   } else {
     caml_enter_blocking_section();
+    /* FIXME */
     mysql = mysql_real_connect(init ,host ,user
                                ,pwd ,db ,port
                                ,NULL, 0);
@@ -203,7 +206,8 @@ db_change_user(value dbd, value args) {
   check_dbd(dbd,"change_user");
 
   caml_enter_blocking_section();
-  if (mysql_change_user(DBDmysql(dbd), user, pwd, db)) {    
+  /* FIXME */
+  if (mysql_change_user(DBDmysql(dbd), user, pwd, db)) {
     caml_leave_blocking_section();
     mysqlfailmsg("Mysql.change_user: %s", mysql_error(DBDmysql(dbd)));
   }
@@ -221,6 +225,7 @@ db_list_dbs(value dbd, value pattern, value blah) {
   MYSQL_ROW row;
 
   caml_enter_blocking_section();
+  /* FIXME */
   res = mysql_list_dbs(DBDmysql(dbd), wild);
   caml_leave_blocking_section();
 
@@ -251,6 +256,7 @@ db_select_db(value dbd, value newdb) {
   check_dbd(dbd, "select_db");
   
   caml_enter_blocking_section();
+  /* FIXME */
   if (mysql_select_db(DBDmysql(dbd), String_val(newdb))) {
     caml_leave_blocking_section();
     mysqlfailmsg("Mysql.select_db: %s", mysql_error(DBDmysql(dbd)));
@@ -268,8 +274,9 @@ db_disconnect(value dbd)
 {
   CAMLparam1(dbd);
   check_dbd(dbd,"disconnect");
+  MYSQL* db = DBDmysql(dbd);
   caml_enter_blocking_section();
-  mysql_close(DBDmysql(dbd));
+  mysql_close(db);
   caml_leave_blocking_section();
   Field(dbd, 1) = Val_false;
   Field(dbd, 2) = Val_false; /* Mark closed */
@@ -279,13 +286,13 @@ db_disconnect(value dbd)
 EXTERNAL value
 db_ping(value dbd)
 {
-
   check_dbd(dbd,"ping");
+  MYSQL* db = DBDmysql(dbd);
 
   caml_enter_blocking_section();
-  if (mysql_ping(DBDmysql(dbd))) {
+  if (mysql_ping(db)) {
     caml_leave_blocking_section();
-    mysqlfailmsg("Mysql.ping: %s", mysql_error(DBDmysql(dbd)));
+    mysqlfailmsg("Mysql.ping: %s", mysql_error(db));
   }
   caml_leave_blocking_section();
   return Val_unit;
@@ -326,11 +333,12 @@ db_exec(value dbd, value sql)
   CAMLparam2(dbd, sql);
   CAMLlocal2(res, v);
   MYSQL *mysql;
-       
+
   check_dbd(dbd,"exec");
   mysql = DBDmysql(dbd);
-        
+
   caml_enter_blocking_section();
+  /* FIXME */
   if (mysql_real_query(mysql, String_val(sql), string_length(sql))) {
     caml_leave_blocking_section();
     mysqlfailmsg("Mysql.exec: %s", mysql_error(mysql));
