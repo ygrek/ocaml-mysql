@@ -5,7 +5,7 @@ RESULT=mysql
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
 
-CFLAGS=@CFLAGS@ 
+CFLAGS=@CFLAGS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
 export OCAMLMKLIB_FLAGS=@LDFLAGS@
 
@@ -14,6 +14,12 @@ opt: native-code-library
 reallyall: byte-code-library native-code-library
 install: libinstall
 uninstall: libuninstall
+
+demos: reallyall
+	ocamlc -custom -I . mysql.cma demo.ml -o demo.byte
+	ocamlopt -I . mysql.cmxa demo.ml -o demo.native
+	ocamlc -custom -I . -thread unix.cma threads.cma mysql.cma demo2.ml -o demo2.byte
+	ocamlopt -I . -thread unix.cmxa threads.cmxa mysql.cmxa demo2.ml -o demo2.native
 
 -include OCamlMakefile
 
