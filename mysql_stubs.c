@@ -26,6 +26,11 @@
 
 #define EXTERNAL                /* dummy to highlight fn's exported to ML */
 
+#ifdef CAML_TEST_GC_SAFE
+#include <unistd.h>
+#define caml_enter_blocking_section() if (1) { caml_enter_blocking_section(); sleep(1); }
+#endif
+
 /* Abstract types 
  *
  * dbd - data base descriptor
