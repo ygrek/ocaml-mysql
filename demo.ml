@@ -19,7 +19,7 @@ let table       =
 
 
 let mk_table () =
-    let r = exec db "create table caml (a char(64), b int, c float)"     in
+    let _r = exec db "create table caml (a char(64), b int, c float)"     in
         db
 
 let fill_table c =

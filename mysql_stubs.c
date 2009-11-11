@@ -26,6 +26,11 @@
 
 #define EXTERNAL                /* dummy to highlight fn's exported to ML */
 
+#ifdef CAML_TEST_GC_SAFE
+#include <unistd.h>
+#define caml_enter_blocking_section() if (1) { caml_enter_blocking_section(); sleep(1); }
+#endif
+
 /* Abstract types 
  *
  * dbd - data base descriptor
@@ -97,17 +102,17 @@ int_option(value v)
 
 
 /*
- * str_option gets a char* from an ML string option value.  Returns
+ * strdup_option copies a char* from an ML string option value.  Returns
  * NULL for None.
  */
 
 static char*
-str_option(value v)
+strdup_option(value v)
 {
   if (v == Val_none)
     return (char*) NULL;
   else 
-    return String_val(Some_val(v));
+    return strdup(String_val(Some_val(v)));
 }
 
 /*
@@ -132,24 +137,27 @@ val_str_option(const char* s, unsigned long length)
   }
 }
 
-/* check_dbd checks that the data base connection is still open.  The
+/* check_db checks that the data base connection is still open.  The
  * open flag is reset by db_disconnect().
  */
 
-static void
-check_dbd(value dbd, char *fun)
+static inline MYSQL*
+check_db(value dbd, const char *fun)
 {
   if (!Bool_val(DBDopen(dbd))) 
     mysqlfailmsg("Mysql.%s called with closed connection", fun);
+  return DBDmysql(dbd);
 }
 
 
 static void
 conn_finalize(value dbd)
 {
-  if (Bool_val(DBDopen(dbd))) {
+  if (Bool_val(DBDopen(dbd))) 
+  {
+    MYSQL* db = DBDmysql(dbd);
     caml_enter_blocking_section();
-    mysql_close(DBDmysql(dbd));
+    mysql_close(db);
     caml_leave_blocking_section();
   }
 }
@@ -163,28 +171,44 @@ db_connect(value args)
 
 {
   CAMLparam1(args);
-  int i = 0;
-  char *host      = str_option(Field(args,i++));
-  char *db        = str_option(Field(args,i++));
-  unsigned port   = (unsigned) int_option(Field(args,i++));
-  char *pwd       = str_option(Field(args,i++));
-  char *user      = str_option(Field(args,i++));
   CAMLlocal1(res);
+  int i = 0;
+  char *host      = NULL;
+  char *db        = NULL;
+  unsigned int port     = 0;
+  char *pwd       = NULL;
+  char *user      = NULL;
   MYSQL *init;
   MYSQL *mysql;
-        
+
   init = mysql_init(NULL);
-  if (!init) {
+  if (!init) 
+  {
     mysqlfailwith("connect failed");
-  } else {
+  } 
+  else 
+  {
+    i = 0;
+    host      = strdup_option(Field(args,i++));
+    db        = strdup_option(Field(args,i++));
+    port      = (unsigned int) int_option(Field(args,i++));
+    pwd       = strdup_option(Field(args,i++));
+    user      = strdup_option(Field(args,i++));
+
     caml_enter_blocking_section();
     mysql = mysql_real_connect(init ,host ,user
                                ,pwd ,db ,port
                                ,NULL, 0);
     caml_leave_blocking_section();
-    if (!mysql) {
+
+    free(host); free(db); free(pwd); free(user);
+
+    if (!mysql) 
+    {
       mysqlfailwith((char*)mysql_error(init));
-    } else {
+    }
+    else 
+    {
       res = alloc_final(3, conn_finalize, 100,1000);
       Field(res, 1) = (value)mysql;
       Field(res, 2) =  Val_true;
@@ -195,48 +219,62 @@ db_connect(value args)
 
 
 EXTERNAL value
-db_change_user(value dbd, value args) {
-  char *db        = str_option(Field(args,1));
-  char *pwd       = str_option(Field(args,3));
-  char *user      = str_option(Field(args,4));
+db_change_user(value v_dbd, value args) 
+{
+  char *db;
+  char *pwd;
+  char *user;
+  my_bool ret;
+  MYSQL* mysql = check_db(v_dbd,"change_user");
 
-  check_dbd(dbd,"change_user");
+  db        = strdup_option(Field(args,1));
+  pwd       = strdup_option(Field(args,3));
+  user      = strdup_option(Field(args,4));
 
   caml_enter_blocking_section();
-  if (mysql_change_user(DBDmysql(dbd), user, pwd, db)) {    
-    caml_leave_blocking_section();
-    mysqlfailmsg("Mysql.change_user: %s", mysql_error(DBDmysql(dbd)));
-  }
+  ret = mysql_change_user(mysql, user, pwd, db);
   caml_leave_blocking_section();
+
+  free(db); free(pwd); free(user);
+
+  if (ret)
+    mysqlfailmsg("Mysql.change_user: %s", mysql_error(mysql));
+
   return Val_unit;
 }
 
 EXTERNAL value
-db_list_dbs(value dbd, value pattern, value blah) {
-  CAMLparam3(dbd, pattern, blah);
+db_list_dbs(value v_dbd, value pattern, value blah)
+{
+  CAMLparam3(v_dbd, pattern, blah);
   CAMLlocal1(dbs);
-  char *wild = str_option(pattern);
+  MYSQL* mysql = check_db(v_dbd,"list_dbs");
+  char *wild = strdup_option(pattern);
   int n, i;
   MYSQL_RES *res;
   MYSQL_ROW row;
 
   caml_enter_blocking_section();
-  res = mysql_list_dbs(DBDmysql(dbd), wild);
+  res = mysql_list_dbs(mysql, wild);
   caml_leave_blocking_section();
+
+  free(wild);
 
   if (!res)
     CAMLreturn(Val_none);
 
   n = mysql_num_rows(res);
 
-  if (n == 0) {
+  if (n == 0) 
+  {
     mysql_free_result(res);
     CAMLreturn(Val_none);
   }
 
   dbs = alloc_tuple(n); /* Array */
   i = 0;
-  while ((row = mysql_fetch_row(res)) != NULL) {
+  while ((row = mysql_fetch_row(res)) != NULL) 
+  {
     Store_field(dbs, i, copy_string(row[0]));
     i++;
   }
@@ -246,17 +284,23 @@ db_list_dbs(value dbd, value pattern, value blah) {
 }
 
 EXTERNAL value
-db_select_db(value dbd, value newdb) {
-
-  check_dbd(dbd, "select_db");
-  
+db_select_db(value v_dbd, value v_newdb)
+{
+  CAMLparam2(v_dbd,v_newdb);
+  MYSQL* mysql = check_db(v_dbd, "select_db");
+  char* newdb = strdup(String_val(v_newdb));
+  my_bool ret;
+ 
   caml_enter_blocking_section();
-  if (mysql_select_db(DBDmysql(dbd), String_val(newdb))) {
-    caml_leave_blocking_section();
-    mysqlfailmsg("Mysql.select_db: %s", mysql_error(DBDmysql(dbd)));
-  }
+  ret = mysql_select_db(mysql, newdb);
   caml_leave_blocking_section();
-  return Val_unit;
+
+  free(newdb);
+
+  if (ret)
+    mysqlfailmsg("Mysql.select_db: %s", mysql_error(mysql));
+
+  CAMLreturn(Val_unit);
 }
 
 /*
@@ -267,9 +311,9 @@ EXTERNAL value
 db_disconnect(value dbd)
 {
   CAMLparam1(dbd);
-  check_dbd(dbd,"disconnect");
+  MYSQL* db = check_db(dbd,"disconnect");
   caml_enter_blocking_section();
-  mysql_close(DBDmysql(dbd));
+  mysql_close(db);
   caml_leave_blocking_section();
   Field(dbd, 1) = Val_false;
   Field(dbd, 2) = Val_false; /* Mark closed */
@@ -279,17 +323,18 @@ db_disconnect(value dbd)
 EXTERNAL value
 db_ping(value dbd)
 {
-
-  check_dbd(dbd,"ping");
+  CAMLparam1(dbd);
+  MYSQL* db = check_db(dbd,"ping");
 
   caml_enter_blocking_section();
-  if (mysql_ping(DBDmysql(dbd))) {
+  if (mysql_ping(db)) 
+  {
     caml_leave_blocking_section();
-    mysqlfailmsg("Mysql.ping: %s", mysql_error(DBDmysql(dbd)));
+    mysqlfailmsg("Mysql.ping: %s", mysql_error(db));
   }
   caml_leave_blocking_section();
-  return Val_unit;
 
+  CAMLreturn(Val_unit);
 }
 
 /*
@@ -321,25 +366,29 @@ struct custom_operations res_ops = {
  */
 
 EXTERNAL value
-db_exec(value dbd, value sql)
+db_exec(value v_dbd, value v_sql)
 {
-  CAMLparam2(dbd, sql);
-  CAMLlocal2(res, v);
-  MYSQL *mysql;
-       
-  check_dbd(dbd,"exec");
-  mysql = DBDmysql(dbd);
-        
+  CAMLparam2(v_dbd, v_sql);
+  CAMLlocal1(res);
+  MYSQL *mysql = check_db(v_dbd,"exec");
+  char* sql = strdup(String_val(v_sql));
+  size_t len = caml_string_length(v_sql);
+  int ret;
+
   caml_enter_blocking_section();
-  if (mysql_real_query(mysql, String_val(sql), string_length(sql))) {
-    caml_leave_blocking_section();
+  ret = mysql_real_query(mysql, sql, len);
+  caml_leave_blocking_section();
+
+  free(sql);
+
+  if (ret)
+  {
     mysqlfailmsg("Mysql.exec: %s", mysql_error(mysql));
-  } else {
-    MYSQL_RES *saved;
-    caml_leave_blocking_section();
+  }
+  else
+  {
     res = alloc_custom(&res_ops, sizeof(MYSQL_RES*), 1, 10);
-    saved = mysql_store_result(DBDmysql(dbd));
-    memcpy(Data_custom_val(res), &saved, sizeof(MYSQL_RES*));
+    RESval(res) = mysql_store_result(mysql);
   }
 
   CAMLreturn(res);
@@ -409,11 +458,9 @@ db_to_row(value result, value offset) {
 
 EXTERNAL value
 db_status(value dbd)
-
 {
-  CAMLparam1(dbd);        
-  check_dbd(dbd, "status");
-  CAMLreturn(Val_int(mysql_errno(DBDmysql(dbd))));
+  CAMLparam1(dbd);
+  CAMLreturn(Val_int(mysql_errno(check_db(dbd,"status"))));
 }
 
 /*
@@ -428,9 +475,7 @@ db_errmsg(value dbd)
   CAMLlocal1(s);
   const char *msg;
 
-  check_dbd(dbd,"errmsg");
-  
-  msg = mysql_error(DBDmysql(dbd));
+  msg = mysql_error(check_db(dbd,"errmsg"));
   if (!msg || msg[0] == '\0')
     msg = (char*) NULL;
   s = val_str_option(msg, msg == (char *) NULL ? 0 : strlen(msg));
@@ -709,7 +754,7 @@ stmt_finalize(value v_stmt)
   caml_enter_blocking_section();
   mysql_stmt_close(stmt);
   caml_leave_blocking_section();
-  Field(v_stmt,1) = 0;
+  STMTval(v_stmt) = (MYSQL_STMT*)NULL;
 }
 
 struct custom_operations stmt_ops = {
@@ -723,38 +768,48 @@ struct custom_operations stmt_ops = {
 
 
 EXTERNAL value
-caml_mysql_stmt_prepare(value dbd, value sql)
+caml_mysql_stmt_prepare(value v_dbd, value v_sql)
 {
-  CAMLparam2(dbd,sql);
+  CAMLparam2(v_dbd,v_sql);
   CAMLlocal1(res);
-  check_dbd(dbd, "Mysql.Prepared.create");
+  MYSQL* db = check_db(v_dbd, "Prepared.create");
+  char* sql_c = strdup(String_val(v_sql));
+  if (!sql_c)
+    mysqlfailwith("Mysql.Prepared.create : strdup");
   caml_enter_blocking_section();
-  MYSQL_STMT* stmt = mysql_stmt_init(DBDmysql(dbd));
+  MYSQL_STMT* stmt = mysql_stmt_init(db);
   if (!stmt)
   {
+    free(sql_c);
     caml_leave_blocking_section();
     mysqlfailwith("Mysql.Prepared.create : mysql_stmt_init");
   }
-  int ret = mysql_stmt_prepare(stmt, String_val(sql), caml_string_length(sql));
-  caml_leave_blocking_section();
+  int ret = mysql_stmt_prepare(stmt, sql_c, strlen(sql_c));
+  free(sql_c);
   if (ret)
-    mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s",ret,String_val(sql));
-  res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 1, 10);
-  memcpy(Data_custom_val(res),&stmt,sizeof(MYSQL_STMT*));
+  { 
+    mysql_stmt_close(stmt);
+    caml_leave_blocking_section();
+    mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s",ret,String_val(v_sql));
+  }
+  caml_leave_blocking_section();
+  res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 0, 1);
+  STMTval(res) = stmt;
   CAMLreturn(res);
 }
 
 EXTERNAL value
-caml_mysql_stmt_close(value stmt)
+caml_mysql_stmt_close(value v_stmt)
 {
-  CAMLparam1(stmt);
-  check_stmt(STMTval(stmt),"close");
+  CAMLparam1(v_stmt);
+  MYSQL_STMT* stmt = STMTval(v_stmt);
+  check_stmt(stmt,"close");
   caml_enter_blocking_section();
-  my_bool ret = mysql_stmt_close(STMTval(stmt));
+  my_bool ret = mysql_stmt_close(stmt);
   caml_leave_blocking_section();
-  Field(stmt,1) = 0;
   if (ret)
     mysqlfailwith("mysql_stmt_close");
+  STMTval(v_stmt) = (MYSQL_STMT*)NULL;
   CAMLreturn(Val_unit);
 }
 
@@ -861,65 +916,66 @@ struct custom_operations stmt_result_ops = {
 };
 
 EXTERNAL value
-caml_mysql_stmt_execute(value stmt, value params)
+caml_mysql_stmt_execute(value v_stmt, value v_params)
 {
-  CAMLparam2(stmt,params);
+  CAMLparam2(v_stmt,v_params);
   CAMLlocal2(res,v);
-  check_stmt(STMTval(stmt),"execute");
-  int i = 0;
-  int len = Wosize_val(params);
+  MYSQL_STMT* stmt = STMTval(v_stmt);
+  check_stmt(stmt,"execute");
+  unsigned int i = 0;
+  unsigned int len = Wosize_val(v_params);
   int err = 0;
   char* bufs[256];
-  if (len != mysql_stmt_param_count(STMTval(stmt)))
-    mysqlfailmsg("Prepared.execute : Got %i parameters, but expected %i", len, mysql_stmt_param_count(STMTval(stmt)));
+  if (len != mysql_stmt_param_count(stmt))
+    mysqlfailmsg("Prepared.execute : Got %i parameters, but expected %i", len, mysql_stmt_param_count(stmt));
   if (len > 256)
     mysqlfailwith("Prepared.execute : too many parameters");
-  row_t* row = create_row(STMTval(stmt), len);
+  row_t* row = create_row(stmt, len);
   if (!row)
-    mysqlfailwith("P.execute : create_row for params");
+    mysqlfailwith("Prepared.execute : create_row for params");
   for (i = 0; i < len; i++)
   {
-    v = Field(params,i);
+    v = Field(v_params,i);
     bufs[i] = malloc(caml_string_length(v));
     memcpy(bufs[i],String_val(v),caml_string_length(v));
     set_param(row,bufs[i],caml_string_length(v),i);
   }
-  err = mysql_stmt_bind_param(STMTval(stmt), row->bind);
+  err = mysql_stmt_bind_param(stmt, row->bind);
   if (err)
   {
     destroy_row(row);
     for (i = 0; i < len; i++) free(bufs[i]);
-    mysqlfailmsg("P.execute : mysql_stmt_bind_param = %i",err);
+    mysqlfailmsg("Prepared.execute : mysql_stmt_bind_param = %i",err);
   }
   caml_enter_blocking_section();
-  err = mysql_stmt_execute(STMTval(stmt));
+  err = mysql_stmt_execute(stmt);
   caml_leave_blocking_section();
 
   destroy_row(row);
   for (i = 0; i < len; i++) free(bufs[i]);
   if (err)
   {
-    mysqlfailmsg("P.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(STMTval(stmt)));
+    mysqlfailmsg("Prepared.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(stmt));
   }
 
-  len = mysql_stmt_field_count(STMTval(stmt));
-  row = create_row(STMTval(stmt), len);
+  len = mysql_stmt_field_count(stmt);
+  row = create_row(stmt, len);
   if (!row)
-    mysqlfailwith("P.execute : create_row for results");
+    mysqlfailwith("Prepared.execute : create_row for results");
   if (len)
   {
     for (i = 0; i < len; i++)
     {
       bind_result(row,i);
     }
-    if (mysql_stmt_bind_result(STMTval(stmt), row->bind))
+    if (mysql_stmt_bind_result(stmt, row->bind))
     {
       destroy_row(row);
-      mysqlfailwith("P.execute : mysql_stmt_bind_result");
+      mysqlfailwith("Prepared.execute : mysql_stmt_bind_result");
     }
   }
   res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 1, 100000);
-  memcpy(Data_custom_val(res),&row,sizeof(row_t*));
+  ROWval(res) = row;
   CAMLreturn(res);
 }
 
@@ -928,7 +984,7 @@ caml_mysql_stmt_fetch(value result)
 {
   CAMLparam1(result);
   CAMLlocal1(arr);
-  int i = 0;
+  unsigned int i = 0;
   row_t* r = ROWval(result);
   check_stmt(r->stmt,"fetch");
   caml_enter_blocking_section();
