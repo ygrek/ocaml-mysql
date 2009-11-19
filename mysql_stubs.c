@@ -387,7 +387,7 @@ db_exec(value v_dbd, value v_sql)
   }
   else
   {
-    res = alloc_custom(&res_ops, sizeof(MYSQL_RES*), 1, 10);
+    res = alloc_custom(&res_ops, sizeof(MYSQL_RES*), 0, 1);
     RESval(res) = mysql_store_result(mysql);
   }
 
@@ -807,9 +807,9 @@ caml_mysql_stmt_close(value v_stmt)
   caml_enter_blocking_section();
   my_bool ret = mysql_stmt_close(stmt);
   caml_leave_blocking_section();
-  if (ret)
-    mysqlfailwith("mysql_stmt_close");
   STMTval(v_stmt) = (MYSQL_STMT*)NULL;
+  if (ret)
+    mysqlfailmsg("mysql_stmt_close: %s", mysql_stmt_error(stmt));
   CAMLreturn(Val_unit);
 }
 
@@ -974,7 +974,7 @@ caml_mysql_stmt_execute(value v_stmt, value v_params)
       mysqlfailwith("Prepared.execute : mysql_stmt_bind_result");
     }
   }
-  res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 1, 100000);
+  res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 0, 1);
   ROWval(res) = row;
   CAMLreturn(res);
 }
