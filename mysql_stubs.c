@@ -805,11 +805,17 @@ caml_mysql_stmt_close(value v_stmt)
   MYSQL_STMT* stmt = STMTval(v_stmt);
   check_stmt(stmt,"close");
   caml_enter_blocking_section();
-  my_bool ret = mysql_stmt_close(stmt);
+  mysql_stmt_close(stmt);
   caml_leave_blocking_section();
   STMTval(v_stmt) = (MYSQL_STMT*)NULL;
-  if (ret)
-    mysqlfailmsg("mysql_stmt_close: %s", mysql_stmt_error(stmt));
+  /*
+   * there is nothing we can do when connection is lost
+   * and anyway in this case the stmt is automatically released by the server
+   * so do not raise exception
+   *
+   * if (ret)
+   *   mysqlfailmsg("mysql_stmt_close: %s", mysql_stmt_error(stmt));
+   */
   CAMLreturn(Val_unit);
 }
 
