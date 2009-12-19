@@ -787,10 +787,11 @@ caml_mysql_stmt_prepare(value v_dbd, value v_sql)
   int ret = mysql_stmt_prepare(stmt, sql_c, strlen(sql_c));
   free(sql_c);
   if (ret)
-  { 
+  {
+    const char* err = mysql_stmt_error(stmt);
     mysql_stmt_close(stmt);
     caml_leave_blocking_section();
-    mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s",ret,String_val(v_sql));
+    mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s. Error : %s",ret,String_val(v_sql),err);
   }
   caml_leave_blocking_section();
   res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 0, 1);
