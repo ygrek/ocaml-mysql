@@ -209,7 +209,7 @@ db_connect(value args)
     }
     else 
     {
-      res = alloc_final(3, conn_finalize, 100,1000);
+      res = alloc_final(3, conn_finalize, 0, 1);
       Field(res, 1) = (value)mysql;
       Field(res, 2) =  Val_true;
     }
