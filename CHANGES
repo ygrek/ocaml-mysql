@@ -1,3 +1,11 @@
+* Sat Dec 26 2009 (1.1.0)
+  * Project moved to http://ocaml-mysql.forge.ocamlcore.org
+  * Fix crash bugs (mainly in GC & threads interaction)
+  * Trigger GC less often (Mysql.connect and Mysql.execute)
+  * Mysql.real_escape (Debian patch)
+  * Mysql.set_charset
+  * Preliminary support for prepared statements (Mysql.Prepared)
+
 * Thu Feb 23 2006 (1.0.4)
   * Build fixes.
   * Can be used in threaded programs, but only by one thread at a time.

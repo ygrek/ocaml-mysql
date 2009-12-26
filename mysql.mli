@@ -230,6 +230,7 @@ val fetch_field_dir : result -> int -> field option
 (** [escape str] returns the same string as [str] in MySQL syntax with
   special characters quoted to not confuse the MySQL parser *)
 val escape : string -> string 
+
 (** [real_escape dbd str] returns [str] encoded
   to an escaped SQL string according to the current character set of [dbd] *)
 val real_escape : dbd -> string -> string
