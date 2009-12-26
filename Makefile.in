@@ -21,5 +21,13 @@ demos: reallyall
 	ocamlc -custom -I . -thread unix.cma threads.cma mysql.cma demo2.ml -o demo2.byte
 	ocamlopt -I . -thread unix.cmxa threads.cmxa mysql.cmxa demo2.ml -o demo2.native
 
+clean-demos:
+	rm -f demo*.{byte,native,cm*,o}
+
+cleanall: clean-demos clean-doc clean
+
 -include OCamlMakefile
+
+release:
+	git archive --format=tar --prefix=ocaml-mysql-@VERSION@/ v@VERSION@ | gzip > ocaml-mysql-@VERSION@.tar.gz
 
