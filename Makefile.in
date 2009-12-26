@@ -11,7 +11,7 @@ export OCAMLMKLIB_FLAGS=@LDFLAGS@
 
 all: byte-code-library 
 opt: native-code-library
-reallyall: byte-code-library native-code-library
+reallyall: byte-code-library native-code-library htdoc
 install: libinstall
 uninstall: libuninstall
 
