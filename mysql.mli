@@ -230,7 +230,12 @@ val fetch_field_dir : result -> int -> field option
 (** [escape str] returns the same string as [str] in MySQL syntax with
   special characters quoted to not confuse the MySQL parser *)
 val escape : string -> string 
+(** [real_escape dbd str] returns [str] encoded
+  to an escaped SQL string according to the current character set of [dbd] *)
 val real_escape : dbd -> string -> string
+
+(** [set_charset dbd charset] sets the current character set for [dbd], aka SET NAMES *)
+val set_charset : dbd -> string -> unit
 
 (** [xxx2ml str] decodes a MySQL value of type xxx into a corresponding
   OCaml value *)
@@ -275,7 +280,10 @@ val opt : ('a -> 'b) -> 'a option -> 'b option
 *)
 val not_null : ('a -> 'b) -> 'a option -> 'b
 
-(** [ml2xxx v] encodes [v] into MySQL syntax. *)
+(** 
+  [ml2xxx v] encodes [v] into MySQL syntax.
+  [ml2rxxx v] encodes [v] into MySQL syntax using [real_escape].
+*)
 
 val ml2str          : string -> string
 val ml2rstr         : dbd -> string -> string

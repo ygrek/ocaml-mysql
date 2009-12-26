@@ -520,21 +520,44 @@ db_real_escape(value dbd, value str)
   MYSQL *mysql;
   CAMLlocal1(res);
 
-  check_dbd(dbd, "escape");
-  mysql = DBDmysql(dbd);
+  mysql = check_db(dbd, "real_escape");
 
   s = String_val(str);
-  len = string_length(str);
-  buf = (char*) stat_alloc(2*len+1);
-  caml_enter_blocking_section();
+  len = caml_string_length(str);
+  buf = (char*)caml_stat_alloc(2*len+1);
+  /* 
+   * mysql_real_escape doesn't perform network I/O, 
+   * so no need for blocking section (and extra copying)
+   * */
   esclen = mysql_real_escape_string(mysql,buf,s,len);
-  caml_leave_blocking_section();
 
-  res = alloc_string(esclen);
+  res = caml_alloc_string(esclen);
   memcpy(String_val(res), buf, esclen);
-  stat_free(buf);
+  caml_stat_free(buf);
 
   CAMLreturn(res);
+}
+
+EXTERNAL value
+db_set_charset(value dbd, value str)
+{
+  CAMLparam2(dbd, str);
+  char *s;
+  MYSQL *mysql;
+  int res;
+
+  mysql = check_db(dbd, "set_charset");
+
+  s = strdup(String_val(str));
+  caml_enter_blocking_section();
+  res = mysql_set_character_set(mysql,s);
+  free(s);
+  caml_leave_blocking_section();
+
+  if (res)
+    mysqlfailmsg("Mysql.set_charset : %s",mysql_error(mysql));
+
+  CAMLreturn(Val_unit);
 }
 
 /*
