@@ -510,6 +510,33 @@ db_escape(value str)
   CAMLreturn(res);
 }
 
+EXTERNAL value
+db_real_escape(value dbd, value str)
+{
+  CAMLparam2(dbd, str);
+  char *s;
+  char *buf;
+  int len, esclen;
+  MYSQL *mysql;
+  CAMLlocal1(res);
+
+  check_dbd(dbd, "escape");
+  mysql = DBDmysql(dbd);
+
+  s = String_val(str);
+  len = string_length(str);
+  buf = (char*) stat_alloc(2*len+1);
+  caml_enter_blocking_section();
+  esclen = mysql_real_escape_string(mysql,buf,s,len);
+  caml_leave_blocking_section();
+
+  res = alloc_string(esclen);
+  memcpy(String_val(res), buf, esclen);
+  stat_free(buf);
+
+  CAMLreturn(res);
+}
+
 /*
  * db_size -- returns the size of the current result (number of rows).
  */

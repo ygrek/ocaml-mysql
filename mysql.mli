@@ -230,6 +230,7 @@ val fetch_field_dir : result -> int -> field option
 (** [escape str] returns the same string as [str] in MySQL syntax with
   special characters quoted to not confuse the MySQL parser *)
 val escape : string -> string 
+val real_escape : dbd -> string -> string
 
 (** [xxx2ml str] decodes a MySQL value of type xxx into a corresponding
   OCaml value *)
@@ -277,14 +278,18 @@ val not_null : ('a -> 'b) -> 'a option -> 'b
 (** [ml2xxx v] encodes [v] into MySQL syntax. *)
 
 val ml2str          : string -> string
+val ml2rstr         : dbd -> string -> string
 val ml2blob         : string -> string
+val ml2rblob        : dbd -> string -> string
 val ml2int          : int -> string
 val ml2decimal      : string -> string
 val ml322int        : int32 -> string
 val ml642int        : int64 -> string
 val ml2float        : float -> string
 val ml2enum         : string -> string
+val ml2renum        : dbd -> string -> string
 val ml2set          : string list -> string
+val ml2rset         : dbd -> string list -> string
 val ml2datetime     : int * int * int * int * int * int -> string
 val ml2datetimel    : year:int -> month:int -> day:int -> hour:int -> min:int -> sec:int -> string
 val ml2date         : int * int * int -> string

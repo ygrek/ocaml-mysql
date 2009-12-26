@@ -333,6 +333,7 @@ external exec       : dbd -> string -> result               = "db_exec"
 external real_status     : dbd -> int                         = "db_status"
 external errmsg     : dbd -> string option                  = "db_errmsg"
 external escape     : string -> string                      = "db_escape"
+external real_escape: dbd -> string -> string               = "db_real_escape"
 external fetch      : result -> string option array option  = "db_fetch" 
 external to_row     : result -> int64 -> unit                 = "db_to_row"
 external size       : result -> int64                         = "db_size"
@@ -516,7 +517,9 @@ let column result =
    the corresponding type *)
   
 let ml2str str  = "'" ^ escape str ^ "'"
+let ml2rstr conn str = "'" ^ real_escape conn str ^ "'"
 let ml2blob     = ml2str
+let ml2rblob    = ml2rstr
 let ml2int x    = string_of_int x
 let ml2decimal x    = x
 let ml322int x  = Int32.to_string x
@@ -524,12 +527,15 @@ let ml642int x  = Int64.to_string x
 let mlnative2int x = Nativeint.to_string x
 let ml2float x  = string_of_float x
 let ml2enum x   = escape x
-let ml2set x    = let rec loop arg = match arg with
-                    | []        -> ""
-                    | [x]       -> escape x
-                    | x::y::ys  -> escape x ^ "," ^ loop (y::ys)
-                  in
-                    loop x  
+let ml2renum x  = real_escape x
+let ml2set_filter f x =
+  let rec loop f = function
+  | []        -> ""
+  | [x]       -> f x
+  | x::y::ys  -> f x ^ "," ^ loop f (y::ys)
+  in loop f x
+let ml2set x       = ml2set_filter escape x
+let ml2rset conn x = ml2set_filter (real_escape conn) x
 
 let ml2datetimel ~year ~month ~day ~hour ~min ~sec =
     Printf.sprintf "'%04d-%02d-%02d %02d:%02d:%02d'"
