@@ -1,0 +1,41 @@
+{bypass end}
+<link rel="alternate" title="ocaml-mysql activity" href="https://forge.ocamlcore.org/export/rss20_activity.php?group_id=137" type="application/rss+xml"/>
+{end}
+
+{section 1|ocaml-mysql}
+
+#{section 2|Description}
+{p}Bindings for interacting with {link http://www.mysql.com|MySQL} databases from {link
+http://caml.inria.fr|OCaml}.
+{p}This project is based on
+{link http://raevnos.pennmush.org/code/ocaml-mysql/|ocaml-mysql by Shawn Wagner} (version 1.0.4
+released in 2006). The initial goal was to fix bugs and add prepared statements support.
+
+#section 2|Status (December 2009)}
+#begin list}
+#*}All the known crash bugs were fixed, mainly in GC & threads interaction. Mysql module is working
+#eliably in presence of threads.
+#*}Querying and reconnecting now triggers GC less often, resulting in significant speedup.
+#*}Prepared statements support is available, though current implementation is suboptimal.
+#end}
+
+#section 2|Links}
+
+{begin list}
+{*}{link https://forge.ocamlcore.org/projects/ocaml-mysql/|OCamlCore project page}
+{*}{link https://forge.ocamlcore.org/frs/?group_id=137|Download}
+#{*}{link https://forge.ocamlcore.org/export/rss20_activity.php?group_id=137|RSS}
+{*}{link https://forge.ocamlcore.org/tracker/?group_id=137|Bug tracker}
+{*}Code
+{begin list}
+  {*}{link http://git.ocamlcore.org/cgi-bin/gitweb.cgi?p=ocaml-mysql/ocaml-mysql.git;a=summary|gitweb}
+  {*}http://git.ocamlcore.org/ocaml-mysql/ocaml-mysql.git/
+  {*}git+ssh://forge.ocamlcore.org/gitroot/ocaml-mysql/ocaml-mysql.git
+{end}
+{*}{link
+http://git.ocamlcore.org/cgi-bin/gitweb.cgi?p=ocaml-mysql/ocaml-mysql.git;a=blob_plain;f=README;hb=HEAD|README}
+{*}{link
+http://git.ocamlcore.org/cgi-bin/gitweb.cgi?p=ocaml-mysql/ocaml-mysql.git;a=blob_plain;f=CHANGES;hb=HEAD|CHANGES}
+{*}{link doc/index.html|Online API documentation}
+{end}
+
