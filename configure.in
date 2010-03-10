@@ -2,13 +2,13 @@ AC_INIT(mysql.mli)
 
 AC_MSG_CHECKING(for version)
 VERSION="`etc/shtool version -l txt -d short VERSION`"
-AC_MSG_RESULT "Configuring Version $VERSION"
+AC_MSG_RESULT(Configuring Version $VERSION)
 AC_SUBST(VERSION)
 
 
 AC_MSG_CHECKING(for platform)
 ARCH="`etc/shtool guessos`"
-AC_MSG_RESULT "$ARCH"
+AC_MSG_RESULT($ARCH)
 AC_SUBST(ARCH)
 AC_CHECKING(for ocaml compiler and tools)
 AC_CHECK_PROG(ocamlc,ocamlc,ocamlc)
@@ -64,4 +64,3 @@ if test "$ac_cv_header_mysql_mysql_h" = "no"; then
 fi
 
 AC_OUTPUT(Makefile)
-AC_OUTPUT(META)

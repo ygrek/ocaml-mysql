@@ -2,12 +2,14 @@ export NO_CUSTOM=1
 
 SOURCES=mysql.mli mysql.ml mysql_stubs.c
 RESULT=mysql
+VERSION=@VERSION@
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
 
 CFLAGS=@CFLAGS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
 export OCAMLMKLIB_FLAGS=@LDFLAGS@
+export OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 
 all: byte-code-library 
 opt: native-code-library
@@ -29,5 +31,5 @@ cleanall: clean-demos clean-doc clean
 -include OCamlMakefile
 
 release:
-	git archive --format=tar --prefix=ocaml-mysql-@VERSION@/ v@VERSION@ | gzip > ocaml-mysql-@VERSION@.tar.gz
+	git archive --format=tar --prefix=ocaml-mysql-$(VERSION)/ v$(VERSION) | gzip > ocaml-mysql-$(VERSION).tar.gz
 

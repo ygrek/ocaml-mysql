@@ -1,5 +1,4 @@
-name="Mysql"
-version="@VERSION@"
+name="mysql"
 description="OCaml bindings to MySQL"
 requires=""
 archive(byte) = "mysql.cma"
