@@ -19,6 +19,9 @@
 
 /* MySQL API */
 
+#if defined(_WIN32)
+#include <mysql/my_global.h>
+#endif
 #include <mysql/mysql.h>
 #include <mysql/mysqld_error.h>
 #include <mysql/errmsg.h>
@@ -822,19 +825,21 @@ caml_mysql_stmt_prepare(value v_dbd, value v_sql)
 {
   CAMLparam2(v_dbd,v_sql);
   CAMLlocal1(res);
+  int ret = 0;
+  MYSQL_STMT* stmt = NULL;
   MYSQL* db = check_db(v_dbd, "Prepared.create");
   char* sql_c = strdup(String_val(v_sql));
   if (!sql_c)
     mysqlfailwith("Mysql.Prepared.create : strdup");
   caml_enter_blocking_section();
-  MYSQL_STMT* stmt = mysql_stmt_init(db);
+  stmt = mysql_stmt_init(db);
   if (!stmt)
   {
     free(sql_c);
     caml_leave_blocking_section();
     mysqlfailwith("Mysql.Prepared.create : mysql_stmt_init");
   }
-  int ret = mysql_stmt_prepare(stmt, sql_c, strlen(sql_c));
+  ret = mysql_stmt_prepare(stmt, sql_c, strlen(sql_c));
   free(sql_c);
   if (ret)
   {
@@ -937,7 +942,7 @@ value get_column(row_t* r, int index)
     bind->buffer = String_val(str);
     bind->buffer_length = length;
     mysql_stmt_fetch_column(r->stmt, bind, index, 0);
-    bind->buffer = 0; // reset binding
+    bind->buffer = 0; /* reset binding */
     bind->buffer_length = 0;
   }
 
@@ -977,17 +982,18 @@ caml_mysql_stmt_execute(value v_stmt, value v_params)
 {
   CAMLparam2(v_stmt,v_params);
   CAMLlocal2(res,v);
-  MYSQL_STMT* stmt = STMTval(v_stmt);
-  check_stmt(stmt,"execute");
   unsigned int i = 0;
   unsigned int len = Wosize_val(v_params);
   int err = 0;
   char* bufs[256];
+  row_t* row = NULL;
+  MYSQL_STMT* stmt = STMTval(v_stmt);
+  check_stmt(stmt,"execute");
   if (len != mysql_stmt_param_count(stmt))
     mysqlfailmsg("Prepared.execute : Got %i parameters, but expected %i", len, mysql_stmt_param_count(stmt));
   if (len > 256)
     mysqlfailwith("Prepared.execute : too many parameters");
-  row_t* row = create_row(stmt, len);
+  row = create_row(stmt, len);
   if (!row)
     mysqlfailwith("Prepared.execute : create_row for params");
   for (i = 0; i < len; i++)
@@ -1042,10 +1048,11 @@ caml_mysql_stmt_fetch(value result)
   CAMLparam1(result);
   CAMLlocal1(arr);
   unsigned int i = 0;
+  int res = 0;
   row_t* r = ROWval(result);
   check_stmt(r->stmt,"fetch");
   caml_enter_blocking_section();
-  int res = mysql_stmt_fetch(r->stmt);
+  res = mysql_stmt_fetch(r->stmt);
   caml_leave_blocking_section();
   if (0 != res && MYSQL_DATA_TRUNCATED != res) CAMLreturn(Val_none);
   arr = caml_alloc(r->count,0);
