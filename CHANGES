@@ -1,3 +1,6 @@
+* ???
+  * Support ocaml/msvc build
+
 * Sat Dec 26 2009 (1.1.0)
   * Project moved to http://ocaml-mysql.forge.ocamlcore.org
   * Fix crash bugs (mainly in GC & threads interaction)
