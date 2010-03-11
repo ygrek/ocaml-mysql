@@ -51,6 +51,12 @@ val quick_connect: ?host:string -> ?database:string -> ?port:int -> ?password:st
 
 (** {2 Altering a connection} *)
 
+(** [set_charset dbd charset] sets the current character set for [dbd] (aka [SET NAMES]).
+    It is strongly recommended to set the charset explicitly after connecting to database, using this function.
+    Available character sets are stored in [INFORMATION_SCHEMA.CHARACTER_SETS] table ([SHOW CHARACTER SET]).
+*)
+val set_charset : dbd -> string -> unit
+
 (** [change_user dbd db] tries to change the current user and database.
    The host and port fields of db are ignored. *)
 val change_user : dbd -> db -> unit
@@ -235,9 +241,6 @@ val escape : string -> string
   to an escaped SQL string according to the current character set of [dbd] *)
 val real_escape : dbd -> string -> string
 
-(** [set_charset dbd charset] sets the current character set for [dbd], aka SET NAMES *)
-val set_charset : dbd -> string -> unit
-
 (** [xxx2ml str] decodes a MySQL value of type xxx into a corresponding
   OCaml value *)
 
@@ -316,19 +319,39 @@ val ml2timestampl   : year:int -> month:int -> day:int -> hour:int -> min:int ->
   SQL `insert ... values ( .. )' statements *)
 val values          : string list -> string
 
-(** Prepared statements with parameters *)
+(** {1 Prepared statements} *)
+
+(** Prepared statements with parameters. Consult the MySQL manual for detailed description 
+    and possible problems. *)
 module Prepared : sig
 
+(** Prepared statement *)
 type stmt
+
+(** Query result (rowset) *)
 type result
 
+(** Create prepared statement. Placeholders for parameters are [?] and [\@param].
+    Returned prepared statement is only valid in the context of this connection and
+    can be reused many times during the lifetime of the connection. *)
 val create : dbd -> string -> stmt
+
+(** Execute the prepared statement with the specified values for parameters. *)
 val execute : stmt -> string array -> result
+
+(** @return Number of rows affected by the last execution of this statement. *)
 val affected : stmt -> int64
+
+(** @return The rowid of the last inserted row. *)
 val insert_id : stmt -> int64
+
+(** @return the error code for the last operation on this statement, [0] for success. *)
 val real_status : stmt -> int
+
+(** @return the next row of the result set. *)
 val fetch : result -> string option array option
+
+(** Destroy the prepared statement *)
 val close : stmt -> unit
 
 end
-
