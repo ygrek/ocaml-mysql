@@ -1,0 +1,47 @@
+
+VERSION=$(shell ocaml etc/get_version.ml)
+
+MYSQL_DIR=C:/my/contrib/mysql-connector-c-noinstall-6.0.2-win32
+
+# dynamic linking - will need libmysql.dll at runtime
+CLIBS=$(MYSQL_DIR)/lib/libmysql.lib
+# static linking
+#CLIBS=$(MYSQL_DIR)/lib/mysqlclient.lib
+
+CFLAGS=/W3 /WL /wd4996 /I$(MYSQL_DIR) /I$(MYSQL_DIR)/mysql
+LIBINSTALL_FILES=$(wildcard mysql.mli mysql.cm* mysql.a libmysql_stubs.a dllmysql_stubs.so mysql.lib libmysql_stubs.lib dllmysql_stubs.dll)
+
+OCAMLMKLIB=ocamlmklib -ocamlc ocamlc -ocamlopt ocamlopt -verbose
+
+all: mysql.cma mysql.cmxa
+
+mysql.cma mysql.cmxa: mysql.ml mysql.mli mysql_stubs.c
+	ocamlc -c -ccopt "$(CFLAGS)" mysql_stubs.c
+	ocamlc -c mysql.mli
+	ocamlc -c -pp camlp4o mysql.ml
+	ocamlopt -c -pp camlp4o mysql.ml
+	$(OCAMLMKLIB) -o mysql -oc mysql_stubs mysql.cmo mysql.cmx mysql_stubs.obj $(CLIBS)
+
+demos: all
+	ocamlc -custom -I . mysql.cma demo.ml -o demo.byte
+	ocamlopt -I . mysql.cmxa demo.ml -o demo.native
+	ocamlc -custom -I . -thread unix.cma threads.cma mysql.cma demo2.ml -o demo2.byte
+	ocamlopt -I . -thread unix.cmxa threads.cmxa mysql.cmxa demo2.ml -o demo2.native
+
+install: all
+	ocamlfind install -patch-version "$(VERSION)" mysql META $(LIBINSTALL_FILES)
+
+uninstall:
+	ocamlfind remove mysql
+
+htdoc: doc/index.html
+
+doc/index.html: mysql.mli
+	-mkdir doc
+	ocamldoc -html -d doc $<
+
+clean:
+	del $(wildcard *.cm* *.o *.a *.so *.obj *.lib *.dll *.byte* *.native*)
+
+#release:
+#	git archive --format=tar --prefix=ocaml-mysql-$(VERSION)/ v$(VERSION) | gzip > ocaml-mysql-$(VERSION).tar.gz
