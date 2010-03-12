@@ -8,7 +8,7 @@ CLIBS=$(MYSQL_DIR)/lib/libmysql.lib
 # static linking
 #CLIBS=$(MYSQL_DIR)/lib/mysqlclient.lib
 
-CFLAGS=/W3 /WL /wd4996 /I$(MYSQL_DIR) /I$(MYSQL_DIR)/mysql
+CFLAGS=/W3 /WL /wd4996 /I$(MYSQL_DIR)/include
 LIBINSTALL_FILES=$(wildcard mysql.mli mysql.cm* mysql.a libmysql_stubs.a dllmysql_stubs.so mysql.lib libmysql_stubs.lib dllmysql_stubs.dll)
 
 OCAMLMKLIB=ocamlmklib -ocamlc ocamlc -ocamlopt ocamlopt -verbose

@@ -20,12 +20,15 @@
 /* MySQL API */
 
 #if defined(_WIN32)
-#include <mysql/my_global.h>
-#endif
+#include <my_global.h>
+#include <mysql.h>
+#else
 #include <mysql/mysql.h>
+/*
 #include <mysql/mysqld_error.h>
 #include <mysql/errmsg.h>
-/* type 'a option = None | Some of 'a */
+*/
+#endif
 
 #define EXTERNAL                /* dummy to highlight fn's exported to ML */
 
