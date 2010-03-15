@@ -67,6 +67,24 @@ of installed MySQL Connector/C distribution. Afterwards run `make` to build mysq
 `make demos` to compile examples and `make install` to install with ocamlfind.
 
 
+1''  Building with ocaml/mingw
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=
+
+  Requirements: see "Building with ocaml/msvc" (but with mingw instead of MSVC)
+
+  Some mingw reimp versions can't process libmysql.lib import library.
+In such cases try to rename this file into "$M/lib/libmysql.a" without
+any processing by reimp.
+
+$ export P="c:/Program Files/MySQL/MySQL Connector C 6.0.2"
+$ export M="c:/mingw"
+$ cp -R "$P/include" "$M/include/mysql"
+$ cp "$P/lib/opt/libmysql.lib" "$M/lib/"
+$ (cd "$M/lib" && reimp libmysql.lib && mv liblibmysql.a libmysql.a)
+$ CPPFLAGS="-I$M/include/mysql" ./configure
+$ make all opt demos
+
+
 2  Trouble Shooting
 *=*=*=*=*=*=*=*=*=*
 
