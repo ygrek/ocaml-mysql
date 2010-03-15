@@ -7,7 +7,7 @@ AC_SUBST(VERSION)
 
 
 AC_MSG_CHECKING(for platform)
-ARCH="`etc/shtool guessos`"
+ARCH="`etc/shtool platform`"
 AC_MSG_RESULT($ARCH)
 AC_SUBST(ARCH)
 AC_CHECKING(for ocaml compiler and tools)
