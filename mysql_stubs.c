@@ -20,7 +20,11 @@
 /* MySQL API */
 
 #if defined(_WIN32)
+#ifdef __MINGW32__
+#include <winsock.h>
+#else
 #include <my_global.h>
+#endif
 #include <mysql.h>
 #else
 #include <mysql/mysql.h>

@@ -8,6 +8,9 @@ LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
 
 CFLAGS=@CFLAGS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS=@LDFLAGS@
+OCAMLLDFLAGS=-cclib -lmysql
 export OCAMLMKLIB_FLAGS=@LDFLAGS@
 export OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 
