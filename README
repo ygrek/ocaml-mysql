@@ -49,28 +49,25 @@ find some include file. However, you should first try the obvious:
 
   This creates the mysql libraries.
 
-1'  Building with ocaml/msvc
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=
+1'  Building on windows
+*=*=*=*=*=*=*=*=*=*=*=*
 
 
   Compiling this package from sources requires the following software to be
 installed on your system:
 
- 1. ocaml 3.11 or above
+ 1. ocaml 3.11 or above with accompanying C compiler setup (msvc or mingw)
  2. findlib
  3. MySQL Connector/C <http://dev.mysql.com/downloads/connector/c/>
- 4. MSVC compiler
- 5. GNU Make
+ 4. GNU Make
+
+  ocaml/msvc :
 
   Copy Makefile.msvc to Makefile and edit MYSQL_DIR variable to point to the root
 of installed MySQL Connector/C distribution. Afterwards run `make` to build mysql library,
 `make demos` to compile examples and `make install` to install with ocamlfind.
 
-
-1''  Building with ocaml/mingw
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=
-
-  Requirements: see "Building with ocaml/msvc" (but with mingw instead of MSVC)
+  ocaml/mingw:
 
   Some mingw reimp versions can't process libmysql.lib import library.
 In such cases try to rename this file into "$M/lib/libmysql.a" without
@@ -78,10 +75,9 @@ any processing by reimp.
 
 $ export P="c:/Program Files/MySQL/MySQL Connector C 6.0.2"
 $ export M="c:/mingw"
-$ cp -R "$P/include" "$M/include/mysql"
 $ cp "$P/lib/opt/libmysql.lib" "$M/lib/"
 $ (cd "$M/lib" && reimp libmysql.lib && mv liblibmysql.a libmysql.a)
-$ CPPFLAGS="-I$M/include/mysql" ./configure
+$ CPPFLAGS="-I$P/include" ./configure
 $ make all opt demos
 
 

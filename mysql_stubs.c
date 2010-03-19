@@ -20,6 +20,7 @@
 /* MySQL API */
 
 #if defined(_WIN32)
+/* mode_t typedef conflict (mingw and mysql) */
 #ifdef __MINGW32__
 #include <winsock.h>
 #else
