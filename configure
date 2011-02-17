@@ -3463,7 +3463,7 @@ _ACEOF
 
 fi
 
-if test "$ac_cv_lib_mysqlclient_mysql_real_connect" == "no"; then
+if test "$ac_cv_lib_mysqlclient_mysql_real_connect" = "no"; then
 	dirs="/usr/local/lib/mysql
 	      /usr/local/mysql/lib
 	      /usr/local/mysql/lib/mysql
@@ -3600,7 +3600,7 @@ if test "$ac_cv_header_mysql_mysql_h" = "no"; then
 	      /usr/local/mysql/include
 	      /usr/include
 	      /usr/include/mysql
-              /sw/include"
+	      /sw/include"
 	for d in $dirs; do
 	    test -f "$d/mysql/mysql.h" && CFLAGS="$CFLAGS -I$d"
 	done
