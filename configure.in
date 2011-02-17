@@ -30,14 +30,14 @@ dnl First see if we can link to mysql without any special flags...
 AC_CHECKING(for MySQL library)
 AC_CHECK_LIB(mysqlclient, mysql_real_connect)
 dnl If not, look in a bunch of typical places.
-if test "$ac_cv_lib_mysqlclient_mysql_real_connect" == "no"; then
+if test "$ac_cv_lib_mysqlclient_mysql_real_connect" = "no"; then
 	dirs="/usr/local/lib/mysql
 	      /usr/local/mysql/lib
 	      /usr/local/mysql/lib/mysql
 	      /usr/local/lib
 	      /usr/lib
 	      /usr/lib/mysql
-	      /sw/lib/mysql"      
+	      /sw/lib/mysql"
 	for d in $dirs; do
   	  	test -f "$d/libmysqlclient.a" && LDFLAGS="-L$d"
 	done
@@ -54,7 +54,7 @@ if test "$ac_cv_header_mysql_mysql_h" = "no"; then
 	      /usr/local/mysql/include
 	      /usr/include
 	      /usr/include/mysql
-              /sw/include"      
+	      /sw/include"
 	for d in $dirs; do
 	    test -f "$d/mysql/mysql.h" && CFLAGS="$CFLAGS -I$d" 
 	done
