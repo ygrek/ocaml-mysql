@@ -7,10 +7,10 @@ html: $(GEN)
 %.html: %.brtx
 	brtx -html -doc -i $< -o $@
 
-upload: index.html
-	scp $< $(WEB)/
+upload: index.html dbspeed.svg
+	rsync -avihz $^ $(WEB)/
 	make -C .. htdoc
-	rsync -avz ../doc/mysql/html/ $(WEB)/doc/
+	rsync -avihz ../doc/mysql/html/ $(WEB)/doc/
 
 clean:
 	rm -f $(GEN)
