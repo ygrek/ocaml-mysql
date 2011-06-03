@@ -189,6 +189,7 @@ db_connect(value args)
   unsigned int port     = 0;
   char *pwd       = NULL;
   char *user      = NULL;
+  char *socket    = NULL;
   MYSQL *init;
   MYSQL *mysql;
 
@@ -205,14 +206,15 @@ db_connect(value args)
     port      = (unsigned int) int_option(Field(args,i++));
     pwd       = strdup_option(Field(args,i++));
     user      = strdup_option(Field(args,i++));
+    socket    = strdup_option(Field(args,i++));
 
     caml_enter_blocking_section();
     mysql = mysql_real_connect(init ,host ,user
                                ,pwd ,db ,port
-                               ,NULL, 0);
+                               ,socket, 0);
     caml_leave_blocking_section();
 
-    free(host); free(db); free(pwd); free(user);
+    free(host); free(db); free(pwd); free(user); free(socket);
 
     if (!mysql) 
     {

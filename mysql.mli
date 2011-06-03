@@ -37,6 +37,7 @@ type db         = { dbhost    : string option;  (**    database server host *)
                 dbport    : int option;     (**    port                 *)
                 dbpwd     : string option;  (**    user password        *)
                 dbuser    : string option;  (**    database user        *)
+                dbsocket  : string option;  (**    unix socket path     *)
                 } 
 
 (** Login information using all defaults *)
@@ -47,7 +48,7 @@ val defaults: db
 val connect : db -> dbd
 
 (** Shortcut for connecting to a database with mostly default field values *)
-val quick_connect: ?host:string -> ?database:string -> ?port:int -> ?password:string -> ?user:string -> unit -> dbd
+val quick_connect: ?host:string -> ?database:string -> ?port:int -> ?password:string -> ?user:string -> ?socket:string -> unit -> dbd
 
 (** {2 Altering a connection} *)
 

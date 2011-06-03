@@ -295,8 +295,9 @@ type db         =
                 { dbhost    : string option  (*    database server host *)
                 ; dbname    : string option  (*    database name        *)
                 ; dbport    : int option     (*    port                 *)
-                ; dbpwd     : string option  (*    user password          *)
+                ; dbpwd     : string option  (*    user password        *)
                 ; dbuser    : string option  (*    database user        *)
+                ; dbsocket  : string option  (*    unix socket path     *)
                 }
 
 type field = { name : string; (* Name of the field *)
@@ -312,14 +313,14 @@ type field = { name : string; (* Name of the field *)
 
 (* low level C interface *)
 
-let defaults = { dbhost = None; dbname = None; dbport = None; dbpwd = None; dbuser = None }
-                                
+let defaults = { dbhost = None; dbname = None; dbport = None; dbpwd = None; dbuser = None; dbsocket = None; }
+
 external connect    : db -> dbd                             = "db_connect"
 
-let quick_connect ?host ?database ?port ?password ?user () =
-  connect { dbhost = host; dbname = database; dbport = port; dbpwd = password; dbuser = user }
+let quick_connect ?host ?database ?port ?password ?user ?socket () =
+  connect { dbhost = host; dbname = database; dbport = port; dbpwd = password; dbuser = user; dbsocket = socket; }
 
-external change_user : dbd -> db -> unit                    = "db_change_user"    
+external change_user : dbd -> db -> unit                    = "db_change_user"
 
 let quick_change ?user ?password ?database conn =
   change_user conn { defaults with
