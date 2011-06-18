@@ -1097,3 +1097,16 @@ caml_mysql_stmt_status(value stmt)
   CAMLreturn(Val_int(mysql_stmt_errno(STMTval(stmt))));
 }
 
+EXTERNAL value
+caml_mysql_stmt_result_metadata(value stmt)
+{
+    CAMLparam1(stmt);
+    CAMLlocal1(res);
+
+    check_stmt(STMTval(stmt), "result_metadata");
+    res = alloc_custom(&res_ops, sizeof(MYSQL_RES*), 0, 1);
+    RESval(res) = mysql_stmt_result_metadata(STMTval(stmt));
+
+    CAMLreturn(res);
+}
+

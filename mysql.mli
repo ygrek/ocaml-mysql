@@ -329,8 +329,8 @@ module Prepared : sig
 (** Prepared statement *)
 type stmt
 
-(** Query result (rowset) *)
-type result
+(** Prepared query result (rowset) *)
+type stmt_result
 
 (** Create prepared statement. Placeholders for parameters are [?] and [\@param].
     Returned prepared statement is only valid in the context of this connection and
@@ -338,7 +338,7 @@ type result
 val create : dbd -> string -> stmt
 
 (** Execute the prepared statement with the specified values for parameters. *)
-val execute : stmt -> string array -> result
+val execute : stmt -> string array -> stmt_result
 
 (** @return Number of rows affected by the last execution of this statement. *)
 val affected : stmt -> int64
@@ -350,7 +350,10 @@ val insert_id : stmt -> int64
 val real_status : stmt -> int
 
 (** @return the next row of the result set. *)
-val fetch : result -> string option array option
+val fetch : stmt_result -> string option array option
+
+(** @return metadata on the statement's result set. *)
+val result_metadata : stmt -> result
 
 (** Destroy the prepared statement *)
 val close : stmt -> unit
