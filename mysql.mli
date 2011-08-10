@@ -51,7 +51,30 @@ type protocol =
 | PROTOCOL_MEMORY
 
 type db_option =
+| OPT_COMPRESS
+| OPT_NAMED_PIPE
+| OPT_LOCAL_INFILE of bool
+| OPT_RECONNECT of bool
+| OPT_SSL_VERIFY_SERVER_CERT of bool
+| REPORT_DATA_TRUNCATION of bool
+| SECURE_AUTH of bool
 | OPT_PROTOCOL of protocol
+| OPT_CONNECT_TIMEOUT of int (** Connect timeout in seconds *)
+| OPT_READ_TIMEOUT of int (** The timeout in seconds for attempts to read from the server.
+                              Each attempt uses this timeout value and there are retries if 
+                              necessary, so the total effective timeout value is three times
+                              the option value. *)
+| OPT_WRITE_TIMEOUT of int (** The timeout in seconds for attempts to write to the server.
+                               Each attempt uses this timeout value and there are net_retry_count
+                               retries if necessary, so the total effective timeout value is 
+                               net_retry_count times the option value. *)
+| INIT_COMMAND of string
+| READ_DEFAULT_FILE of string (** Read options from the named option file instead of from my.cnf. *)
+| READ_DEFAULT_GROUP of string (** Read options from the named group *)
+| SET_CHARSET_DIR of string (** The path name to the directory that contains character set definition files. *)
+| SET_CHARSET_NAME of string (** The name of the character set to use as the default character set. *)
+| SHARED_MEMORY_BASE_NAME of string (** The name of the shared-memory object for communication to the server 
+                                        on Windows, if the server supports shared-memory connections *)
 
 (** [connect ?options db] connects to the database [db] and returns a handle for
    further use

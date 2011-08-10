@@ -323,7 +323,23 @@ type protocol =
 | PROTOCOL_MEMORY
 
 type db_option =
+| OPT_COMPRESS
+| OPT_NAMED_PIPE
+| OPT_LOCAL_INFILE of bool
+| OPT_RECONNECT of bool
+| OPT_SSL_VERIFY_SERVER_CERT of bool
+| REPORT_DATA_TRUNCATION of bool
+| SECURE_AUTH of bool
 | OPT_PROTOCOL of protocol
+| OPT_CONNECT_TIMEOUT of int
+| OPT_READ_TIMEOUT of int
+| OPT_WRITE_TIMEOUT of int
+| INIT_COMMAND of string
+| READ_DEFAULT_FILE of string
+| READ_DEFAULT_GROUP of string
+| SET_CHARSET_DIR of string
+| SET_CHARSET_NAME of string
+| SHARED_MEMORY_BASE_NAME of string
 
 external connect    : db_option list -> db -> dbd                             = "db_connect"
 

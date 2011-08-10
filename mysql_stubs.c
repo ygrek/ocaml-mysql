@@ -182,6 +182,11 @@ static unsigned int ml_mysql_protocol_type[] = {
   MYSQL_PROTOCOL_PIPE, MYSQL_PROTOCOL_MEMORY
 };
  
+#define SET_OPTION(option, p) if (0 != mysql_options(init,MYSQL_##option,p)) mysqlfailwith( "MYSQL_" #option ); break
+#define SET_OPTION_BOOL(option) option_bool = Bool_val(v); SET_OPTION(option, &option_bool)
+#define SET_OPTION_INT(option) option_int = Int_val(v); SET_OPTION(option, &option_int)
+#define SET_OPTION_STR(option) SET_OPTION(option, String_val(v))
+
 EXTERNAL value
 db_connect(value options, value args)
 
@@ -196,7 +201,8 @@ db_connect(value options, value args)
   char *socket    = NULL;
   MYSQL *init;
   MYSQL *mysql;
-  unsigned int arg = 0;
+  unsigned int option_int;
+  my_bool option_bool;
 
   init = mysql_init(NULL);
   if (!init) 
@@ -207,23 +213,38 @@ db_connect(value options, value args)
   {
     while (options != Val_emptylist) 
     {
-      v = Field(options,0);
-      if (Is_block(v))
+      if (Is_block(Field(options,0)))
       {
-        switch (Tag_val(v))
+        v = Field(Field(options,0),0);
+        switch (Tag_val(Field(options,0)))
         {
-          case 0:
-            arg = ml_mysql_protocol_type[Int_val(Field(v,0))];
-            if (0 != mysql_options(init,MYSQL_OPT_PROTOCOL,&arg))
-              mysqlfailwith("mysql_options");
-            break;
+          case  0: SET_OPTION_BOOL(OPT_LOCAL_INFILE);
+          case  1: SET_OPTION_BOOL(OPT_RECONNECT);
+          case  2: SET_OPTION_BOOL(OPT_SSL_VERIFY_SERVER_CERT);
+          case  3: SET_OPTION_BOOL(REPORT_DATA_TRUNCATION);
+          case  4: SET_OPTION_BOOL(SECURE_AUTH);
+          case  5: SET_OPTION(OPT_PROTOCOL, &ml_mysql_protocol_type[Int_val(v)]);
+          case  6: SET_OPTION_INT(OPT_CONNECT_TIMEOUT);
+          case  7: SET_OPTION_INT(OPT_READ_TIMEOUT);
+          case  8: SET_OPTION_INT(OPT_WRITE_TIMEOUT);
+          case  9: SET_OPTION_STR(INIT_COMMAND);
+          case 10: SET_OPTION_STR(READ_DEFAULT_FILE);
+          case 11: SET_OPTION_STR(READ_DEFAULT_GROUP);
+          case 12: SET_OPTION_STR(SET_CHARSET_DIR);
+          case 13: SET_OPTION_STR(SET_CHARSET_NAME);
+          case 14: SET_OPTION_STR(SHARED_MEMORY_BASE_NAME);
           default:
             invalid_argument("Mysql.connect: unknown option");
         }
       }
       else
       {
-        invalid_argument("Mysql.connect: unknown option");
+        switch (Int_val(Field(options,0)))
+        {
+          case 0: SET_OPTION(OPT_COMPRESS, NULL);
+          case 1: SET_OPTION(OPT_NAMED_PIPE, NULL);
+          default: invalid_argument("Mysql.connect: unknown option");
+        }
       }
       options = Field(options, 1);
     }
