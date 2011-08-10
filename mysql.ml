@@ -315,10 +315,22 @@ type field = { name : string; (* Name of the field *)
 
 let defaults = { dbhost = None; dbname = None; dbport = None; dbpwd = None; dbuser = None; dbsocket = None; }
 
-external connect    : db -> dbd                             = "db_connect"
+type protocol =
+| PROTOCOL_DEFAULT
+| PROTOCOL_TCP
+| PROTOCOL_SOCKET
+| PROTOCOL_PIPE
+| PROTOCOL_MEMORY
 
-let quick_connect ?host ?database ?port ?password ?user ?socket () =
-  connect { dbhost = host; dbname = database; dbport = port; dbpwd = password; dbuser = user; dbsocket = socket; }
+type db_option =
+| OPT_PROTOCOL of protocol
+
+external connect    : db_option list -> db -> dbd                             = "db_connect"
+
+let connect ?(options=[]) db = connect options db
+
+let quick_connect ?options ?host ?database ?port ?password ?user ?socket () =
+  connect ?options { dbhost = host; dbname = database; dbport = port; dbpwd = password; dbuser = user; dbsocket = socket; }
 
 external change_user : dbd -> db -> unit                    = "db_change_user"
 

@@ -31,7 +31,7 @@
 (** database connection handle *)
 type dbd
 
-(** Login information for a database. database. Use [None] for default values *)
+(** Login information for a database. Use [None] for default values *)
 type db         = { dbhost    : string option;  (**    database server host *)
                 dbname    : string option;  (**    database name        *)
                 dbport    : int option;     (**    port                 *)
@@ -43,12 +43,24 @@ type db         = { dbhost    : string option;  (**    database server host *)
 (** Login information using all defaults *)
 val defaults: db
 
-(** [connect db] connects to the database [db] and returns a handle for
-   further user *)
-val connect : db -> dbd
+type protocol =
+| PROTOCOL_DEFAULT
+| PROTOCOL_TCP
+| PROTOCOL_SOCKET
+| PROTOCOL_PIPE
+| PROTOCOL_MEMORY
+
+type db_option =
+| OPT_PROTOCOL of protocol
+
+(** [connect ?options db] connects to the database [db] and returns a handle for
+   further use
+   @param options connection specific options, default empty list
+*)
+val connect : ?options:db_option list -> db -> dbd
 
 (** Shortcut for connecting to a database with mostly default field values *)
-val quick_connect: ?host:string -> ?database:string -> ?port:int -> ?password:string -> ?user:string -> ?socket:string -> unit -> dbd
+val quick_connect: ?options:db_option list -> ?host:string -> ?database:string -> ?port:int -> ?password:string -> ?user:string -> ?socket:string -> unit -> dbd
 
 (** {2 Altering a connection} *)
 

@@ -176,14 +176,18 @@ conn_finalize(value dbd)
 /* db_connect opens a data base connection and returns an abstract
  * connection object.
  */
+
+static unsigned int ml_mysql_protocol_type[] = {
+  MYSQL_PROTOCOL_DEFAULT, MYSQL_PROTOCOL_TCP, MYSQL_PROTOCOL_SOCKET,
+  MYSQL_PROTOCOL_PIPE, MYSQL_PROTOCOL_MEMORY
+};
  
 EXTERNAL value
-db_connect(value args)
+db_connect(value options, value args)
 
 {
-  CAMLparam1(args);
-  CAMLlocal1(res);
-  int i = 0;
+  CAMLparam2(options, args);
+  CAMLlocal2(res, v);
   char *host      = NULL;
   char *db        = NULL;
   unsigned int port     = 0;
@@ -192,6 +196,7 @@ db_connect(value args)
   char *socket    = NULL;
   MYSQL *init;
   MYSQL *mysql;
+  unsigned int arg = 0;
 
   init = mysql_init(NULL);
   if (!init) 
@@ -200,13 +205,35 @@ db_connect(value args)
   } 
   else 
   {
-    i = 0;
-    host      = strdup_option(Field(args,i++));
-    db        = strdup_option(Field(args,i++));
-    port      = (unsigned int) int_option(Field(args,i++));
-    pwd       = strdup_option(Field(args,i++));
-    user      = strdup_option(Field(args,i++));
-    socket    = strdup_option(Field(args,i++));
+    while (options != Val_emptylist) 
+    {
+      v = Field(options,0);
+      if (Is_block(v))
+      {
+        switch (Tag_val(v))
+        {
+          case 0:
+            arg = ml_mysql_protocol_type[Int_val(Field(v,0))];
+            if (0 != mysql_options(init,MYSQL_OPT_PROTOCOL,&arg))
+              mysqlfailwith("mysql_options");
+            break;
+          default:
+            invalid_argument("Mysql.connect: unknown option");
+        }
+      }
+      else
+      {
+        invalid_argument("Mysql.connect: unknown option");
+      }
+      options = Field(options, 1);
+    }
+
+    host      = strdup_option(Field(args,0));
+    db        = strdup_option(Field(args,1));
+    port      = (unsigned int) int_option(Field(args,2));
+    pwd       = strdup_option(Field(args,3));
+    user      = strdup_option(Field(args,4));
+    socket    = strdup_option(Field(args,5));
 
     caml_enter_blocking_section();
     mysql = mysql_real_connect(init ,host ,user
