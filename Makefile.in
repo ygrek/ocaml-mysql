@@ -32,6 +32,11 @@ cleanall: clean-demos clean-doc clean
 
 -include OCamlMakefile
 
+NAME=ocaml-mysql-$(VERSION)
+
+.PHONY: release
 release:
-	git archive --format=tar --prefix=ocaml-mysql-$(VERSION)/ v$(VERSION) | gzip > ocaml-mysql-$(VERSION).tar.gz
+	git tag -a -m $(VERSION) v$(VERSION)
+	git archive --prefix=$(NAME)/ v$(VERSION) | tar --delete $(NAME)/web | gzip > $(NAME).tar.gz
+	gpg -a -b $(NAME).tar.gz
 

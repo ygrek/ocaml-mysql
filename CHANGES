@@ -1,6 +1,11 @@
-* ???
-  * Support ocaml/msvc build
-  * Support ocaml 3.12
+* Sat May 19 2012 (1.1.1)
+  * Support build with ocaml/msvc and ocaml/mingw (Dmitry Grebeniuk)
+  * Update build tools (Dmitry Grebeniuk)
+  * OCaml 3.12 compatibility
+  * Mysql.Prepared: documentation comments
+  * Mysql.Prepared.result_metadata (Hezekiah M. Carty)
+  * Mysql.quick_connect: optional unix socket path
+  * Mysql.quick_connect: optional connection options
 
 * Sat Dec 26 2009 (1.1.0)
   * Project moved to http://ocaml-mysql.forge.ocamlcore.org
