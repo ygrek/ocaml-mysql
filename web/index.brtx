@@ -15,10 +15,11 @@ released in 2006). The initial goal was to fix bugs and add prepared statements 
 {section 2|Links}
 
 {begin list}
-{*}{link https://forge.ocamlcore.org/projects/ocaml-mysql/|OCamlCore project page}
+{*}{link https://forge.ocamlcore.org/projects/ocaml-mysql/|Project page at OCamlForge}
 {*}{link https://forge.ocamlcore.org/frs/?group_id=137|Download}
 {begin list}
-  {*}{link https://forge.ocamlcore.org/frs/download.php/336/ocaml-mysql-1.1.0.tar.gz|ocaml-mysql-1.1.0.tar.gz}, 26 Dec 2009
+  {*}{link https://forge.ocamlcore.org/frs/download.php/870/ocaml-mysql-1.1.1.tar.gz|ocaml-mysql-1.1.1.tar.gz}
+  ({link https://forge.ocamlcore.org/frs/download.php/871/ocaml-mysql-1.1.1.tar.gz.asc|sig}), 19 May 2012
 {end}
 #{*}{link https://forge.ocamlcore.org/export/rss20_activity.php?group_id=137|RSS}
 {*}{link https://forge.ocamlcore.org/tracker/?group_id=137|Bug tracker}
