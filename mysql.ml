@@ -249,28 +249,27 @@ let error_of_int code = match code with
 
 (* Status of MySQL database after an operation. Especially indicates empty 
    result sets *)
-
-type status     =
-                | StatusOK
-                | StatusEmpty
-                | StatusError of error_code
+type status =
+| StatusOK
+| StatusEmpty
+| StatusError of error_code
 
 (* database field type *)
-
-type dbty       = IntTy         (* 0  *)
-                | FloatTy       (* 1  *)
-                | StringTy      (* 2  *)
-                | SetTy         (* 3  *)
-                | EnumTy        (* 4  *)
-                | DateTimeTy    (* 5  *)
-                | DateTy        (* 6  *)
-                | TimeTy        (* 7  *)
-                | YearTy        (* 8  *)
-                | TimeStampTy   (* 9  *)
-                | UnknownTy     (* 10 *)
-                | Int64Ty       (* 11 *)
-		| BlobTy        (* 12 *)
-		| DecimalTy	(* 13 *)
+type dbty =
+| IntTy         (* 0  *)
+| FloatTy       (* 1  *)
+| StringTy      (* 2  *)
+| SetTy         (* 3  *)
+| EnumTy        (* 4  *)
+| DateTimeTy    (* 5  *)
+| DateTy        (* 6  *)
+| TimeTy        (* 7  *)
+| YearTy        (* 8  *)
+| TimeStampTy   (* 9  *)
+| UnknownTy     (* 10 *)
+| Int64Ty       (* 11 *)
+| BlobTy        (* 12 *)
+| DecimalTy     (* 13 *)
 
 let pretty_type = function
   | IntTy -> "integer"
@@ -351,8 +350,7 @@ let quick_connect ?options ?host ?database ?port ?password ?user ?socket () =
 external change_user : dbd -> db -> unit                    = "db_change_user"
 
 let quick_change ?user ?password ?database conn =
-  change_user conn { defaults with
-		       dbuser = user; dbpwd = password; dbname = database }
+  change_user conn { defaults with dbuser = user; dbpwd = password; dbname = database }
 
 external select_db   : dbd -> string -> unit                = "db_select_db"
 external list_dbs    : dbd -> ?pat:string -> unit -> string array option = "db_list_dbs"
@@ -381,7 +379,7 @@ external fetch_field_dir : result -> int -> field option = "db_fetch_field_dir"
 let status dbd =
   let x = real_status dbd in
   match x with
-    0 -> StatusOK
+  | 0 -> StatusOK
   | 1065 -> StatusEmpty
   | _ -> StatusError (error_of_int x)
 
@@ -389,20 +387,20 @@ let errno dbd = error_of_int (real_status dbd)
 
 (* [sub start len str] returns integer obtained from substring of length 
    [len] from [str] *)
-  
+
 let sub start len str = int_of_string (String.sub str ~pos:start ~len)
 
 (* xxx2ml parses a string returned from a MySQL field typed xxx and turns it into a 
    corresponding OCaml value.
 
    MySQL uses the following representations for date/time values
-    
+
    DATETIME     yyyy-mm-dd hh:mm:ss
    DATE         yyyy-mm-dd'
    TIME         hh:mm:ss'
    YEAR         yyyy'
    TIMESTAMP    YYYYMMDDHHMMSS'
-*)   
+*)
  
 
 let int2ml   str        = int_of_string str
@@ -424,7 +422,7 @@ let set2ml str =
     let tokens      = lexer(Stream.of_string str)                       in
     let rec list    = parser
                       | [< 'Ident i; t = tail >]    -> i :: t
-                      | [< >]                       -> []               
+                      | [< >]                       -> []
     and tail        = parser
                       | [< 'Kwd ","; l = list >]    -> l
                       | [< >]                       -> []               in
@@ -446,30 +444,25 @@ let datetime2ml str =
 
 let date2ml str =
     assert (String.length str = 10);
-
     let year    = sub 0  4 str   in
     let month   = sub 5  2 str   in 
     let day     = sub 8  2 str   in
         (year,month,day)
 
-   
 let time2ml str =
     assert (String.length str = 8);
-     
+
     let hour    = sub 0 2 str   in
     let minute  = sub 3 2 str   in
     let second  = sub 6 2 str   in
         (hour,minute,second)
-    
-                                  
+
 let year2ml str =
     assert (String.length str = 4);
     sub 0 4 str
-    
 
 let timestamp2ml str =
     assert (String.length str = 14);
-
     let year    = sub 0  4 str   in
     let month   = sub 4  2 str   in 
     let day     = sub 6  2 str   in
@@ -479,20 +472,16 @@ let timestamp2ml str =
         (year,month,day,hour,minute,second)
 
 
-            
-
 (* [opt f v] applies [f] to optional value [v]. Use this to fetch
    data of known type from database fields which might be NULL:
    [opt int2ml str] *)
-
 let opt f arg = match arg with 
     | None      -> None
     | Some x    -> Some (f x)
-    
+
 (* [not_null f v] applies [f] to [Some v]. Use this to fetch data of known 
    type from database fields which never can be NULL: [not_null int2ml str] 
 *)
-    
 let not_null f arg = match arg with
     | None      -> fail "not_null was applied to None"
     | Some x    -> f x 
@@ -501,19 +490,19 @@ let not_null f arg = match arg with
 let names result =
   Array.init (fields result) ~f:(function offset ->
     match fetch_field_dir result offset with
-      Some field -> field.name
+    | Some field -> field.name
     | None -> "")
-  
+
 let types result =
   Array.init (fields result) ~f:(function offset ->
     match fetch_field_dir result offset with
-      Some field -> field.ty
+    | Some field -> field.ty
     | None -> (fail "Unknown type in field"))
 
 (* [column result] returns a function [col] which fetches columns from
    results by column name.  [col] has type string -> 'a array -> 'b. 
    Where the first argument is the name of the column. 
-   
+
 
         let r   = exec dbd "select * from table"  in
         let col = col r                           in
@@ -522,10 +511,9 @@ let types result =
             Some a -> not_null int2ml (col "label" a) :: loop (fetch r)
         in 
             loop (fetch r)
-        
+
 *)
 
-        
 let column result =
     let names = names result                                    in
     let map   = (* maps names to positions *)
@@ -541,11 +529,11 @@ let column result =
      let col ~key ~row =
        row.(StrMap.find key map)
      in
-        col
+     col
 
 (* ml2xxx encodes OCaml values into strings that match the MysQL syntax of 
    the corresponding type *)
-  
+
 let ml2str str  = "'" ^ escape str ^ "'"
 let ml2rstr conn str = "'" ^ real_escape conn str ^ "'"
 let ml2blob     = ml2str
@@ -609,10 +597,11 @@ let iter res ~f =
   if size res > Int64.zero then
     let rec loop () =
       match fetch res with
-	  Some row -> f row; loop ()
-	| None -> () in
-      to_row res Int64.zero;
-      loop ()
+      | Some row -> f row; loop ()
+      | None -> ()
+    in
+    to_row res Int64.zero;
+    loop ()
 
 let iter_col res ~key ~f =
   let col = column res ~key in
@@ -626,13 +615,14 @@ let map res ~f =
   if size res > Int64.zero then
     let rec loop lst = 
       match fetch res with
-	  Some row -> loop (f row :: lst)
-	| None -> lst in
-      to_row res Int64.zero;
-      List.rev (loop [])
+      | Some row -> loop (f row :: lst)
+      | None -> lst
+    in
+    to_row res Int64.zero;
+    List.rev (loop [])
   else
     []
-      
+
 let map_col res ~key ~f =
   let col = column res ~key in
   map res ~f:(function row -> f (col ~row))
@@ -656,4 +646,3 @@ external result_metadata : stmt -> result = "caml_mysql_stmt_result_metadata"
 external close : stmt -> unit = "caml_mysql_stmt_close"
 
 end
-

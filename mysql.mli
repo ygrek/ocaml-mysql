@@ -19,9 +19,7 @@
 *)
 
 (**
-
     This module provides access to MySQL databases, roughly following the C API
-
 *)
 
 (** {1 Database connections} *)
@@ -32,13 +30,14 @@
 type dbd
 
 (** Login information for a database. Use [None] for default values *)
-type db         = { dbhost    : string option;  (**    database server host *)
-                dbname    : string option;  (**    database name        *)
-                dbport    : int option;     (**    port                 *)
-                dbpwd     : string option;  (**    user password        *)
-                dbuser    : string option;  (**    database user        *)
-                dbsocket  : string option;  (**    unix socket path     *)
-                } 
+type db = {
+  dbhost    : string option;  (** database server host *)
+  dbname    : string option;  (** database name        *)
+  dbport    : int option;     (** port                 *)
+  dbpwd     : string option;  (** user password        *)
+  dbuser    : string option;  (** database user        *)
+  dbsocket  : string option;  (** unix socket path     *)
+} 
 
 (** Login information using all defaults *)
 val defaults: db
@@ -76,8 +75,7 @@ type db_option =
 | SHARED_MEMORY_BASE_NAME of string (** The name of the shared-memory object for communication to the server 
                                         on Windows, if the server supports shared-memory connections *)
 
-(** [connect ?options db] connects to the database [db] and returns a handle for
-   further use
+(** [connect ?options db] connects to the database [db] and returns a handle for further use
    @param options connection specific options, default empty list
 *)
 val connect : ?options:db_option list -> db -> dbd
@@ -100,15 +98,13 @@ val change_user : dbd -> db -> unit
 (** Another shortcut *)
 val quick_change: ?user:string -> ?password:string -> ?database:string -> dbd -> unit
 
-(** [select_db] Switch to a new db, using the current user and password. *)
+(** [select_db] switches to a new db, using the current user and password. *)
 val select_db   : dbd -> string -> unit
 
-(** [disconnect dbd] releases a database connection [dbd]. The handle [dbd] 
-   becomes invalid *)
+(** [disconnect dbd] releases a database connection [dbd]. The handle [dbd] becomes invalid *)
 val disconnect : dbd -> unit
 
-(** [ping dbd] makes sure the connection to the server is up, and
-   re-establishes it if needed. *)
+(** [ping dbd] makes sure the connection to the server is up, and re-establishes it if needed. *)
 val ping : dbd -> unit
 
 (** {2 Information about a connection} *)
@@ -138,9 +134,10 @@ exception Error of string
 type error_code = Aborting_connection | Access_denied_error | Alter_info | Bad_db_error | Bad_field_error | Bad_host_error | Bad_null_error | Bad_table_error | Blob_cant_have_default | Blob_key_without_length | Blob_used_as_key | Blobs_and_no_terminated | Cant_create_db | Cant_create_file | Cant_create_table | Cant_create_thread | Cant_delete_file | Cant_drop_field_or_key | Cant_find_dl_entry | Cant_find_system_rec | Cant_find_udf | Cant_get_stat | Cant_get_wd | Cant_initialize_udf | Cant_lock | Cant_open_file | Cant_open_library | Cant_read_charset | Cant_read_dir | Cant_remove_all_fields | Cant_reopen_table | Cant_set_wd | Checkread | Columnaccess_denied_error | Commands_out_of_sync | Con_count_error | Conn_host_error | Connection_error | Db_create_exists | Db_drop_delete | Db_drop_exists | Db_drop_rmdir | Dbaccess_denied_error | Delayed_cant_change_lock | Delayed_insert_table_locked | Disk_full | Dup_entry | Dup_fieldname | Dup_key | Dup_keyname | Dup_unique | Empty_query | Error_on_close | Error_on_read | Error_on_rename | Error_on_write | Field_specified_twice | File_exists_error | File_not_found | File_used | Filsort_abort | Forcing_close | Form_not_found | Function_not_defined | Get_errno | Got_signal | Grant_wrong_host_or_user | Handshake_error | Hashchk | Host_is_blocked | Host_not_privileged | Illegal_grant_for_table | Illegal_ha | Insert_info | Insert_table_used | Invalid_default | Invalid_group_func_use | Invalid_use_of_null | Ipsock_error | Key_column_does_not_exits | Key_not_found | Kill_denied_error | Load_info | Localhost_connection | Mix_of_group_func_and_fields | Multiple_pri_key | Namedpipe_connection | Namedpipeopen_error | Namedpipesetstate_error | Namedpipewait_error | Net_error_on_write | Net_fcntl_error | Net_packet_too_large | Net_packets_out_of_order | Net_read_error | Net_read_error_from_pipe | Net_read_interrupted | Net_uncompress_error | Net_write_interrupted | Nisamchk | No | No_db_error | No_raid_compiled | No_such_index | No_such_table | No_such_thread | No_tables_used | No_unique_logfile | Non_uniq_error | Nonexisting_grant | Nonexisting_table_grant | Nonuniq_table | Normal_shutdown | Not_allowed_command | Not_form_file | Not_keyfile | Null_column_in_index | Old_keyfile | Open_as_readonly | Out_of_memory | Out_of_resources | Out_of_sortmemory | Outofmemory | Parse_error | Password_anonymous_user | Password_no_match | Password_not_allowed | Primary_cant_have_null | Ready | Record_file_full | Regexp_error | Requires_primary_key | Server_gone_error | Server_handshake_err | Server_lost | Server_shutdown | Shutdown_complete | Socket_create_error | Stack_overrun | Syntax_error | Table_cant_handle_auto_increment | Table_cant_handle_blob | Table_exists_error | Table_must_have_columns | Table_not_locked | Table_not_locked_for_write | Tableaccess_denied_error | Tcp_connection | Textfile_not_readable | Too_big_fieldlength | Too_big_rowsize | Too_big_select | Too_big_set | Too_long_ident | Too_long_key | Too_long_string | Too_many_delayed_threads | Too_many_fields | Too_many_key_parts | Too_many_keys | Too_many_rows | Too_many_tables | Udf_exists | Udf_no_paths | Unexpected_eof | Unknown_character_set | Unknown_com_error | Unknown_error | Unknown_host | Unknown_procedure | Unknown_table | Unsupported_extension | Update_info | Update_without_key_in_safe_mode | Version_error | Wrong_auto_key | Wrong_column_name | Wrong_db_name | Wrong_field_spec | Wrong_field_terminators | Wrong_field_with_group | Wrong_group_field | Wrong_host_info | Wrong_key_column | Wrong_mrg_table | Wrong_outer_join | Wrong_paramcount_to_procedure | Wrong_parameters_to_procedure | Wrong_sub_key | Wrong_sum_select | Wrong_table_name | Wrong_value_count | Wrong_value_count_on_row | Yes
 
 (** The status of a query *)
-type status = StatusOK (** The query was successful *)
-	      | StatusEmpty (** The query was successful, but found no results *)
-	      | StatusError of error_code (** There was some problem with the query *)
+type status =
+| StatusOK (** The query was successful *)
+| StatusEmpty (** The query was successful, but found no results *)
+| StatusError of error_code (** There was some problem with the query *)
 
 (** [status dbd] returns the status of the last action on [dbd] *)
 val status : dbd -> status
@@ -158,7 +155,7 @@ val errmsg : dbd -> string option
 (** {2 Making a query} *)
 
 (** handle to access the result of a query *)
-type result     
+type result
 
 (** [exec dbd str] executes a SQL statement and returns a handle to obtain 
    the result. Check [status] for errors! *) 
@@ -184,8 +181,8 @@ val to_row : result -> int64 -> unit
 val size : result -> int64
 
 (** [iter result f] applies f to each row of result in turn, starting
-from the first. iter_col applies f to the value of the named column
-in every row.
+   from the first. iter_col applies f to the value of the named column
+   in every row.
 
    The iter versions return unit, the map versions return a list of
    the results of all the function applications. If there were no rows
@@ -205,24 +202,24 @@ val map_cols : result -> key:string array -> f:(string option array -> 'a) -> 'a
 (** Returns one field of a result row based on column name. *)
 val column : result -> key:string -> row:string option array -> string option
 
-
 (** {2 Metainformation about a result set} *)
 
 (** The type of a database field. Each of these represents one or more MySQL data types. *)
-type dbty       = IntTy          
-                | FloatTy        
-                | StringTy       
-                | SetTy          
-                | EnumTy         
-                | DateTimeTy     
-                | DateTy         
-                | TimeTy         
-                | YearTy         
-                | TimeStampTy    
-                | UnknownTy      
-                | Int64Ty        
-		| BlobTy          
-		| DecimalTy
+type dbty =
+| IntTy
+| FloatTy
+| StringTy
+| SetTy
+| EnumTy
+| DateTimeTy
+| DateTy
+| TimeTy
+| YearTy
+| TimeStampTy
+| UnknownTy
+| Int64Ty
+| BlobTy
+| DecimalTy
 
 (** The type that describes a field of a table or result *)
 type field = { name : string; (** Name of the field *)
@@ -243,19 +240,17 @@ val pretty_type: dbty -> string
 val affected : dbd -> int64
 
 (** [insert_id result] returns the ID generated by the last INSERT
-query in a table with an AUTO_INCREMENT column. See the MySQL
-documentation for caveats. *)
+  query in a table with an AUTO_INCREMENT column. See the MySQL
+  documentation for caveats. *)
 val insert_id: dbd -> int64
-				     
+
 (** [fields result] returns the number of fields in a row *)
 val fields : result -> int
 
-(** [names result] returns an array of the field names for the current result
- *)
+(** [names result] returns an array of the field names for the current result *)
 val names : result -> string array
 
-(** [types result] returns an array with the MySQL types of the current 
-  result *)
+(** [types result] returns an array with the MySQL types of the current result *)
 val types : result -> dbty array
 
 (** Returns the information on the next field *)
@@ -277,8 +272,7 @@ val escape : string -> string
   to an escaped SQL string according to the current character set of [dbd] *)
 val real_escape : dbd -> string -> string
 
-(** [xxx2ml str] decodes a MySQL value of type xxx into a corresponding
-  OCaml value *)
+(** [xxx2ml str] decodes a MySQL value of type xxx into a corresponding OCaml value *)
 
 (** Use for all MySQL signed integer types but BIGINT *)
 val int2ml          : string -> int
