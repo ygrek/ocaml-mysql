@@ -265,7 +265,12 @@ val fetch_field_dir : result -> int -> field option
 (** {1 Working with MySQL data types} *)
 
 (** [escape str] returns the same string as [str] in MySQL syntax with
-  special characters quoted to not confuse the MySQL parser *)
+  special characters quoted to not confuse the MySQL parser.
+
+@deprecated This function poses a security risk (doesn't take into consideration
+  the character set of the current connection and may allow SQL injection pass through).
+  Use {!real_escape} instead.
+*)
 val escape : string -> string 
 
 (** [real_escape dbd str] returns [str] encoded
@@ -319,8 +324,11 @@ val not_null : ('a -> 'b) -> 'a option -> 'b
   [ml2rxxx v] encodes [v] into MySQL syntax using [real_escape].
 *)
 
+(** @deprecated This function uses {!escape} which poses a security risk. Use {!ml2rstr} instead. *)
 val ml2str          : string -> string
 val ml2rstr         : dbd -> string -> string
+
+(** @deprecated This function uses {!escape} which poses a security risk. Use {!ml2rblob} instead. *)
 val ml2blob         : string -> string
 val ml2rblob        : dbd -> string -> string
 val ml2int          : int -> string
