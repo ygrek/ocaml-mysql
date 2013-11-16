@@ -638,6 +638,7 @@ type stmt_result
 
 external create : dbd -> string -> stmt = "caml_mysql_stmt_prepare"
 external execute : stmt -> string array -> stmt_result = "caml_mysql_stmt_execute"
+external execute_null : stmt -> string option array -> stmt_result = "caml_mysql_stmt_execute_null"
 external affected : stmt -> int64 = "caml_mysql_stmt_affected"
 external insert_id : stmt -> int64 = "caml_mysql_stmt_insert_id"
 external real_status : stmt -> int = "caml_mysql_stmt_status"

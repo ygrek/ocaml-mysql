@@ -377,6 +377,9 @@ val create : dbd -> string -> stmt
 (** Execute the prepared statement with the specified values for parameters. *)
 val execute : stmt -> string array -> stmt_result
 
+(** Same as {!execute}, but with support for NULL values. *)
+val execute_null : stmt -> string option array -> stmt_result
+
 (** @return Number of rows affected by the last execution of this statement. *)
 val affected : stmt -> int64
 

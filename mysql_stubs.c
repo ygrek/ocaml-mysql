@@ -965,15 +965,25 @@ row_t* create_row(MYSQL_STMT* stmt, size_t count)
   return row;
 }
 
-void set_param(row_t *r, char* str, size_t len, int index)
+void set_param_string(row_t *r, value v, int index)
 {
   MYSQL_BIND* bind = &r->bind[index];
+  size_t len = caml_string_length(v);
 
   r->length[index] = len;
   bind->length = &r->length[index];
   bind->buffer_length = len;
   bind->buffer_type = MYSQL_TYPE_STRING;
-  bind->buffer = (void*)str;
+  bind->buffer = malloc(len);
+  memcpy(bind->buffer, String_val(v), len);
+}
+
+void set_param_null(row_t *r, int index)
+{
+  MYSQL_BIND* bind = &r->bind[index];
+
+  bind->buffer_type = MYSQL_TYPE_NULL;
+  bind->buffer = NULL;
 }
 
 void bind_result(row_t* r, int index)
@@ -1044,45 +1054,47 @@ struct custom_operations stmt_result_ops = {
 #endif
 };
 
-EXTERNAL value
-caml_mysql_stmt_execute(value v_stmt, value v_params)
+value
+caml_mysql_stmt_execute_gen(value v_stmt, value v_params, int with_null)
 {
   CAMLparam2(v_stmt,v_params);
   CAMLlocal2(res,v);
   unsigned int i = 0;
   unsigned int len = Wosize_val(v_params);
   int err = 0;
-  char* bufs[256];
   row_t* row = NULL;
   MYSQL_STMT* stmt = STMTval(v_stmt);
   check_stmt(stmt,"execute");
   if (len != mysql_stmt_param_count(stmt))
     mysqlfailmsg("Prepared.execute : Got %i parameters, but expected %i", len, mysql_stmt_param_count(stmt));
-  if (len > 256)
-    mysqlfailwith("Prepared.execute : too many parameters");
   row = create_row(stmt, len);
   if (!row)
     mysqlfailwith("Prepared.execute : create_row for params");
   for (i = 0; i < len; i++)
   {
     v = Field(v_params,i);
-    bufs[i] = malloc(caml_string_length(v));
-    memcpy(bufs[i],String_val(v),caml_string_length(v));
-    set_param(row,bufs[i],caml_string_length(v),i);
+    if (with_null)
+      if (Val_none == v)
+        set_param_null(row, i);
+      else
+        set_param_string(row, Some_val(v), i);
+    else
+      set_param_string(row, v, i);
   }
   err = mysql_stmt_bind_param(stmt, row->bind);
   if (err)
   {
+    for (i = 0; i < len; i++) free(row->bind[i].buffer);
     destroy_row(row);
-    for (i = 0; i < len; i++) free(bufs[i]);
     mysqlfailmsg("Prepared.execute : mysql_stmt_bind_param = %i",err);
   }
   caml_enter_blocking_section();
   err = mysql_stmt_execute(stmt);
   caml_leave_blocking_section();
 
+  for (i = 0; i < len; i++) free(row->bind[i].buffer);
   destroy_row(row);
-  for (i = 0; i < len; i++) free(bufs[i]);
+
   if (err)
   {
     mysqlfailmsg("Prepared.execute : mysql_stmt_execute = %i, %s",err,mysql_stmt_error(stmt));
@@ -1107,6 +1119,16 @@ caml_mysql_stmt_execute(value v_stmt, value v_params)
   res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 0, 1);
   ROWval(res) = row;
   CAMLreturn(res);
+}
+
+EXTERNAL value caml_mysql_stmt_execute(value v_stmt, value v_param)
+{
+  return caml_mysql_stmt_execute_gen(v_stmt, v_param, 0);
+}
+
+EXTERNAL value caml_mysql_stmt_execute_null(value v_stmt, value v_param)
+{
+  return caml_mysql_stmt_execute_gen(v_stmt, v_param, 1);
 }
 
 EXTERNAL value
