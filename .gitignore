@@ -1,0 +1,17 @@
+doc/
+._d/
+._bcdi/
+._ncdi/
+Makefile
+config.log
+config.status
+*.byte
+*.native
+*.cm[aiox]
+*.cmxa
+*.o
+*.obj
+*.so
+*.dll
+*.lib
+*.a
