@@ -13,6 +13,7 @@ LDFLAGS=@LDFLAGS@
 export OCAMLMKLIB_FLAGS=@LDFLAGS@
 export OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 
+build: all opt
 all: byte-code-library 
 opt: native-code-library
 reallyall: byte-code-library native-code-library htdoc

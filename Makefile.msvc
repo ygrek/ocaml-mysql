@@ -13,6 +13,7 @@ LIBINSTALL_FILES=$(wildcard mysql.mli mysql.cm* mysql.a libmysql_stubs.a dllmysq
 
 OCAMLMKLIB=ocamlmklib -ocamlc ocamlc -ocamlopt ocamlopt -verbose
 
+build: all
 all: mysql.cma mysql.cmxa
 
 mysql.cma mysql.cmxa: mysql.ml mysql.mli mysql_stubs.c
