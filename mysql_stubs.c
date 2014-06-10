@@ -186,6 +186,7 @@ static unsigned int ml_mysql_protocol_type[] = {
 #define SET_OPTION_BOOL(option) option_bool = Bool_val(v); SET_OPTION(option, &option_bool)
 #define SET_OPTION_INT(option) option_int = Int_val(v); SET_OPTION(option, &option_int)
 #define SET_OPTION_STR(option) SET_OPTION(option, String_val(v))
+#define SET_CLIENT_FLAG(flag) client_flag |= flag; break
 
 EXTERNAL value
 db_connect(value options, value args)
@@ -244,7 +245,7 @@ db_connect(value options, value args)
         {
           case 0: SET_OPTION(OPT_COMPRESS, NULL);
           case 1: SET_OPTION(OPT_NAMED_PIPE, NULL);
-          case 2: client_flag |= CLIENT_FOUND_ROWS; break;
+          case 2: SET_CLIENT_FLAG(CLIENT_FOUND_ROWS);
           default: invalid_argument("Mysql.connect: unknown option");
         }
       }
