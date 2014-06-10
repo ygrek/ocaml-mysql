@@ -339,6 +339,7 @@ type db_option =
 | SET_CHARSET_DIR of string
 | SET_CHARSET_NAME of string
 | SHARED_MEMORY_BASE_NAME of string
+| OPT_FOUND_ROWS
 
 external connect    : db_option list -> db -> dbd                             = "db_connect"
 

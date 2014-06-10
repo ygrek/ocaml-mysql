@@ -203,6 +203,7 @@ db_connect(value options, value args)
   MYSQL *mysql;
   unsigned int option_int;
   my_bool option_bool;
+  unsigned long client_flag = 0;
 
   init = mysql_init(NULL);
   if (!init) 
@@ -243,6 +244,7 @@ db_connect(value options, value args)
         {
           case 0: SET_OPTION(OPT_COMPRESS, NULL);
           case 1: SET_OPTION(OPT_NAMED_PIPE, NULL);
+          case 2: client_flag |= CLIENT_FOUND_ROWS; break;
           default: invalid_argument("Mysql.connect: unknown option");
         }
       }
@@ -259,7 +261,7 @@ db_connect(value options, value args)
     caml_enter_blocking_section();
     mysql = mysql_real_connect(init ,host ,user
                                ,pwd ,db ,port
-                               ,socket, 0);
+                               ,socket, client_flag);
     caml_leave_blocking_section();
 
     free(host); free(db); free(pwd); free(user); free(socket);

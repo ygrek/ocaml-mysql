@@ -74,6 +74,7 @@ type db_option =
 | SET_CHARSET_NAME of string (** The name of the character set to use as the default character set. *)
 | SHARED_MEMORY_BASE_NAME of string (** The name of the shared-memory object for communication to the server 
                                         on Windows, if the server supports shared-memory connections *)
+| OPT_FOUND_ROWS  (** Return the number of found (matched) rows, not the number of changed rows. *)
 
 (** [connect ?options db] connects to the database [db] and returns a handle for further use
    @param options connection specific options, default empty list
