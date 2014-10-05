@@ -6,7 +6,7 @@ VERSION=@VERSION@
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
 
-CFLAGS=@CFLAGS@ -Wall -Wextra
+CFLAGS=@CFLAGS@ @DEFS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS=@LDFLAGS@

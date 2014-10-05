@@ -2,15 +2,14 @@ AC_INIT(mysql.mli)
 
 AC_MSG_CHECKING(for version)
 VERSION="`etc/shtool version -l txt -d short VERSION`"
-AC_MSG_RESULT(Configuring Version $VERSION)
+AC_MSG_RESULT([$VERSION])
 AC_SUBST(VERSION)
 
-
-AC_MSG_CHECKING(for platform)
+AC_MSG_CHECKING([for platform])
 ARCH="`etc/shtool platform`"
-AC_MSG_RESULT($ARCH)
+AC_MSG_RESULT([$ARCH])
 AC_SUBST(ARCH)
-AC_CHECKING(for ocaml compiler and tools)
+AC_CHECKING([for ocaml compiler and tools])
 AC_CHECK_PROG(ocamlc,ocamlc,ocamlc)
 AC_CHECK_PROG(ocamlopt,ocamlopt,ocamlopt)
 AC_CHECK_PROG(ocamlfind,ocamlfind,ocamlfind)
@@ -18,49 +17,23 @@ AC_CHECK_PROG(ocamlfind,ocamlfind,ocamlfind)
 AC_PROG_INSTALL
 AC_SUBST(INSTALL)
 
-AC_CHECKING(for C compiler)
-AC_PROG_CC
+AC_CHECKING([for C compiler])
+AC_PROG_CC()
 
-AC_CHECKING(for C header files)
-AC_HEADER_STDC
+AC_CHECKING([for C header files])
+AC_HEADER_STDC()
 
 AC_CHECKING(libraries)
 
 dnl First see if we can link to mysql without any special flags...
-AC_CHECKING(for MySQL library)
-AC_CHECK_LIB(mysqlclient, mysql_real_connect)
-dnl If not, look in a bunch of typical places.
-if test "$ac_cv_lib_mysqlclient_mysql_real_connect" = "no"; then
-	dirs="/usr/local/lib/mysql
-	      /usr/local/mysql/lib
-	      /usr/local/mysql/lib/mysql
-	      /usr/local/lib
-	      /usr/lib
-	      /usr/lib/mysql
-	      /sw/lib/mysql"
-	for d in $dirs; do
-  	  	test -f "$d/libmysqlclient.a" && LDFLAGS="-L$d"
-	done
-	AC_CHECKING(in more locations)
-        unset ac_cv_lib_mysqlclient_mysql_real_connect
-	AC_CHECK_LIB(mysqlclient, mysql_real_connect)
-fi
-AC_CHECK_LIB(z, compress)
+AC_CHECKING([for MySQL library])
+AC_CHECK_LIB(mysqlclient, mysql_real_connect, [], [AC_MSG_ERROR([MySQL client library not found])])
 
-AC_CHECKING(for MySQL header files)
-AC_CHECK_HEADER(mysql/mysql.h)
-if test "$ac_cv_header_mysql_mysql_h" = "no"; then
-	dirs="/usr/local/include
-	      /usr/local/mysql/include
-	      /usr/include
-	      /usr/include/mysql
-	      /sw/include"
-	for d in $dirs; do
-	    test -f "$d/mysql/mysql.h" && CFLAGS="$CFLAGS -I$d" 
-	done
-	unset ac_cv_header_mysql_mysql_h
-	AC_CHECKING(in more locations)
-	AC_CHECK_HEADER(mysql/mysql.h)
+AC_CHECKING([for MySQL header files])
+AC_CHECK_HEADERS([mysql/mysql.h mysql.h], [break]) 
+if test "$ac_cv_header_mysql_mysql_h" != "yes" -a "$ac_cv_header_mysql_h" != "yes"; then 
+    AC_MSG_ERROR([MySQL headers not found]) 
 fi
 
+AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT(Makefile)

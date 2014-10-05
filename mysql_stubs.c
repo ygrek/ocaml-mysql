@@ -17,6 +17,11 @@
 #include <caml/custom.h>
 #include <caml/signals.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+/* else attempt without (think msvc build) */
+#endif
+
 /* MySQL API */
 
 #if defined(_WIN32)
@@ -26,13 +31,12 @@
 #else
 #include <my_global.h>
 #endif
-#include <mysql.h>
-#else
+#endif
+
+#if defined(HAVE_MYSQL_MYSQL_H)
 #include <mysql/mysql.h>
-/*
-#include <mysql/mysqld_error.h>
-#include <mysql/errmsg.h>
-*/
+#else
+#include <mysql.h>
 #endif
 
 #define EXTERNAL                /* dummy to highlight fn's exported to ML */

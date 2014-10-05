@@ -3,8 +3,10 @@ doc/
 ._bcdi/
 ._ncdi/
 Makefile
+config.h
 config.log
 config.status
+autom4te.cache
 *.byte
 *.native
 *.cm[aiox]
