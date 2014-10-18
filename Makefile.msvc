@@ -19,8 +19,8 @@ all: mysql.cma mysql.cmxa
 mysql.cma mysql.cmxa: mysql.ml mysql.mli mysql_stubs.c
 	ocamlc -c -ccopt "$(CFLAGS)" mysql_stubs.c
 	ocamlc -c mysql.mli
-	ocamlc -c -pp camlp4o mysql.ml
-	ocamlopt -c -pp camlp4o mysql.ml
+	ocamlc -c mysql.ml
+	ocamlopt -c mysql.ml
 	$(OCAMLMKLIB) -o mysql -oc mysql_stubs mysql.cmo mysql.cmx mysql_stubs.obj $(CLIBS)
 
 demos: all

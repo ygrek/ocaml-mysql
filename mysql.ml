@@ -1,4 +1,3 @@
-(*pp camlp4o *)
 (*
     Ocaml-MySQL: MySQL bindings for Ocaml.
     Copyright (C) 2001-2003 Shawn Wagner <shawnw@speakeasy.org>
@@ -24,9 +23,6 @@ module String = StdLabels.String
 module Array = StdLabels.Array
 
 module StrMap = Map.Make(struct type t = string let compare = compare end)
-
-open Genlex
-
 
 exception Error of string
 
@@ -419,18 +415,18 @@ let blob2ml  str        = str
    *)
 
 let set2ml str =
-    let lexer       = make_lexer [ "," ]                                in
-    let tokens      = lexer(Stream.of_string str)                       in
-    let rec list    = parser
-                      | [< 'Ident i; t = tail >]    -> i :: t
-                      | [< >]                       -> []
-    and tail        = parser
-                      | [< 'Kwd ","; l = list >]    -> l
-                      | [< >]                       -> []               in
-            try
-                list tokens
-            with Parsing.Parse_error -> fail ("not a proper set: " ^ str)
-
+  let rec wsp acc i =
+    if i = String.length str then acc else
+    match str.[i] with
+    | ' ' | '\t' | '\n' | '\r' | ',' -> wsp acc (i + 1)
+    | _ -> loop acc i (i+1)
+  and loop acc p_start i =
+    if i = String.length str then (String.sub str p_start (String.length str - p_start)) :: acc else
+    match str.[i] with
+    | ' ' | '\t' | '\n' | '\r' | ',' -> wsp (String.sub str p_start (i - p_start) :: acc) (i+1)
+    | _ -> loop acc p_start (i+1)
+  in
+  List.rev (wsp [] 0)
 
 let datetime2ml str =
     assert (String.length str = 19);
