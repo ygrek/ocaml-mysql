@@ -3430,6 +3430,24 @@ $as_echo "#define STDC_HEADERS 1" >>confdefs.h
 fi
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql_config include" >&5
+$as_echo_n "checking for mysql_config include... " >&6; }
+MYSQL_INCLUDE=`mysql_config --include`
+if  test "$?" -eq 0 ; then :
+  CPPFLAGS="$MYSQL_INCLUDE $CPPFLAGS"
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $MYSQL_INCLUDE" >&5
+$as_echo "$MYSQL_INCLUDE" >&6; }
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql_config pkglibdir" >&5
+$as_echo_n "checking for mysql_config pkglibdir... " >&6; }
+MYSQL_LIBDIR=`mysql_config --variable=pkglibdir`
+if  test "$?" -eq 0 ; then :
+  LDFLAGS="-L$MYSQL_LIBDIR $LDFLAGS"
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $MYSQL_LIBDIR" >&5
+$as_echo "$MYSQL_LIBDIR" >&6; }
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for MySQL library..." >&5
 $as_echo "$as_me: checking for MySQL library..." >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql_real_connect in -lmysqlclient" >&5
