@@ -2,7 +2,7 @@ export NO_CUSTOM=1
 
 SOURCES=mysql.mli mysql.ml mysql_stubs.c
 RESULT=mysql
-VERSION=@VERSION@
+VERSION=@PACKAGE_VERSION@
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
 
