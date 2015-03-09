@@ -3,6 +3,7 @@ doc/
 ._bcdi/
 ._ncdi/
 Makefile
+VERSION
 config.h
 config.log
 config.status

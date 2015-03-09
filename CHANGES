@@ -1,3 +1,7 @@
+* Tue Mar 10 2015 (1.2.0)
+  * Get rid of Camlp4 dependency
+  * Use mysql_config in configure
+
 * Thu Oct 16 2014 (1.1.3)
   * + OPT_FOUND_ROWS (Dmitry Grebeniuk)
   * configure: build with percona
