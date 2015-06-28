@@ -87,9 +87,8 @@ mysqlfailmsg(const char *fmt, ...) {
   va_start(args, fmt);
   vsnprintf(buf, sizeof buf, fmt, args);
   va_end(args);
-  
-  raise_with_string(*caml_named_value("mysql error"), buf);  
 
+  raise_with_string(*caml_named_value("mysql error"), buf);
 }
 
 #define Val_none Val_int(0)
@@ -915,9 +914,11 @@ caml_mysql_stmt_prepare(value v_dbd, value v_sql)
   if (ret)
   {
     const char* err = mysql_stmt_error(stmt);
+    char buf[1024];
+    snprintf(buf, sizeof buf, "Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s. Error : %s",ret,String_val(v_sql),err);
     mysql_stmt_close(stmt);
     caml_leave_blocking_section();
-    mysqlfailmsg("Mysql.Prepared.create : mysql_stmt_prepare = %i. Query : %s. Error : %s",ret,String_val(v_sql),err);
+    mysqlfailwith(buf);
   }
   caml_leave_blocking_section();
   res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 0, 1);
