@@ -996,11 +996,13 @@ void set_param_null(row_t *r, int index)
 
 void bind_result(row_t* r, int index)
 {
+  // This buffer is never used. It is nessary only to allow mysql to do conversion for non-string types, whenever necessary
+  static char buf[1024];
   MYSQL_BIND* bind = &r->bind[index];
 
   bind->buffer_type = MYSQL_TYPE_STRING;
-  bind->buffer = 0;
-  bind->buffer_length = 0;
+  bind->buffer = buf;
+  bind->buffer_length = sizeof(buf);
   bind->is_null = &r->is_null[index];
   bind->length = &r->length[index];
   bind->error = &r->error[index];
