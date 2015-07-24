@@ -1,25 +1,24 @@
 
+                     OCaml-MySQL -- MySQL access for OCaml
+                     *************************************
 
-                 OCamlMySQL -- MySQL access for OCaml
-                 *************************************
-
-                  http://ocaml-mysql.forge.ocamlcore.org/
-                  =======================================
-                         Based on a release by:
-                              Shawn Wagner
-                           shawnw@speakeasy.org
-                    http://raevnos.pennmush.org/ocaml/
-                    ===============================
-                         Based on a release by:
-                            Christian Lindig
-                           lindig@eecs.harvard.edu
-                     http://www.eecs.harvard.edu/~lindig 
-                   ==================================
+                    http://ocaml-mysql.forge.ocamlcore.org/
+                    =======================================
+                             Based on a release by:
+                                  Shawn Wagner
+                              shawnw@speakeasy.org
+                  http://raevnos.pennmush.org/code/ocaml-mysql
+                  ============================================
+                             Based on a release by:
+                                Christian Lindig
+                            lindig@eecs.harvard.edu
+                      http://www.eecs.harvard.edu/~lindig
+                      ===================================
 
 
-  ocaml-mysql is a package for OCaml that provides access to mysql 
-databases. It consists of low level functions implemented in C and a
-module Mysql intended for application development. 
+  ocaml-mysql is a package for OCaml that provides access to mysql
+databases. It consists of low-level C bindings to libmysqlclient and a
+module Mysql intended for application development.
 
 
 1  Building
@@ -81,15 +80,15 @@ $ CPPFLAGS="-I$P/include" ./configure
 $ make all opt demos
 
 
-2  Trouble Shooting
-*=*=*=*=*=*=*=*=*=*
+2  Troubleshooting
+*=*=*=*=*=*=*=*=*=
 
 
   If compilation fails this is most probably because include or library
 files were not found. The configure looks in a number of places but may
 fail to find the files on your system. In case you have GNU Autoconf
 installed you can take a look at the configure.in and add more
-directories to search: 
+directories to search:
 
               <<
                 AC_CHECKING(for MySQL header files)
@@ -112,10 +111,10 @@ Please send a patch back to the author.
   Reading the mysql documentation should help, too.
   Two small demos are available. Build them with `make demos`.
 
-  Note: The library can now be used in multithreaded ocaml programs without
-  blocking threads during i/o with the database server. However, only one
-  thread should use mysql functions. Better support for multi-threaded servers
-  using libmysqlclient_r coming someday.
+  Note: The library can be used in multithreaded ocaml programs without
+  blocking threads during i/o with the database server.
+  Since MySQL 5.5 it is safe to share database handle between threads in most scenarios, see
+  http://dev.mysql.com/doc/refman/5.5/en/c-api-threaded-clients.html
 
 4  Copying
 *=*=*=*=*=
@@ -132,4 +131,3 @@ Please send a patch back to the author.
 
   Current maintainer:
     ygrek <ygrek@autistici.org>
-
