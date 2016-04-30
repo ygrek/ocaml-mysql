@@ -8,7 +8,7 @@
 #include <stdarg.h>
 
 /* OCaml runtime system */
-
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
@@ -75,12 +75,14 @@ static void mysqlfailwith(char *err) Noreturn;
 static void mysqlfailmsg(const char *fmt, ...) Noreturn;
 
 static void
-mysqlfailwith(char *err) {
-  raise_with_string(*caml_named_value("mysql error"), err);
+mysqlfailwith(char *err)
+{
+  caml_raise_with_string(*caml_named_value("mysql error"), err);
 }
 
 static void
-mysqlfailmsg(const char *fmt, ...) {
+mysqlfailmsg(const char *fmt, ...)
+{
   char buf[1024];
   va_list args;
 
@@ -88,7 +90,7 @@ mysqlfailmsg(const char *fmt, ...) {
   vsnprintf(buf, sizeof buf, fmt, args);
   va_end(args);
 
-  raise_with_string(*caml_named_value("mysql error"), buf);
+  caml_raise_with_string(*caml_named_value("mysql error"), buf);
 }
 
 #define Val_none Val_int(0)
@@ -239,7 +241,7 @@ db_connect(value options, value args)
           case 13: SET_OPTION_STR(SET_CHARSET_NAME);
           case 14: SET_OPTION_STR(SHARED_MEMORY_BASE_NAME);
           default:
-            invalid_argument("Mysql.connect: unknown option");
+            caml_invalid_argument("Mysql.connect: unknown option");
         }
       }
       else
@@ -249,7 +251,7 @@ db_connect(value options, value args)
           case 0: SET_OPTION(OPT_COMPRESS, NULL);
           case 1: SET_OPTION(OPT_NAMED_PIPE, NULL);
           case 2: SET_CLIENT_FLAG(CLIENT_FOUND_ROWS);
-          default: invalid_argument("Mysql.connect: unknown option");
+          default: caml_invalid_argument("Mysql.connect: unknown option");
         }
       }
       options = Field(options, 1);
@@ -276,7 +278,7 @@ db_connect(value options, value args)
     }
     else
     {
-      res = alloc_final(3, conn_finalize, 0, 1);
+      res = caml_alloc_final(3, conn_finalize, 0, 1);
       Field(res, 1) = (value)mysql;
       Field(res, 2) =  Val_true;
     }
@@ -338,11 +340,11 @@ db_list_dbs(value v_dbd, value pattern, value blah)
     CAMLreturn(Val_none);
   }
 
-  dbs = alloc_tuple(n); /* Array */
+  dbs = caml_alloc_tuple(n); /* Array */
   i = 0;
   while ((row = mysql_fetch_row(res)) != NULL)
   {
-    Store_field(dbs, i, copy_string(row[0]));
+    Store_field(dbs, i, caml_copy_string(row[0]));
     i++;
   }
 
@@ -457,7 +459,7 @@ db_exec(value v_dbd, value v_sql)
   }
   else
   {
-    res = alloc_custom(&res_ops, sizeof(MYSQL_RES*), 0, 1);
+    res = caml_alloc_custom(&res_ops, sizeof(MYSQL_RES*), 0, 1);
     RESval(res) = mysql_store_result(mysql);
   }
 
@@ -496,7 +498,7 @@ db_fetch (value result)
   /* create Some([| f1; f2; .. ;fn |]) */
 
   length = mysql_fetch_lengths(res);      /* length[] */
-  fields = alloc_tuple(n);                    /* array */
+  fields = caml_alloc_tuple(n);                    /* array */
   for (i=0;i<n;i++) {
     s = val_str_option(row[i], length[i]);
     Store_field(fields, i, s);
@@ -516,7 +518,7 @@ db_to_row(value result, value offset)
     mysqlfailwith("Mysql.to_row: result did not return fetchable data");
 
   if (off < 0 || off > (int64_t)mysql_num_rows(res)-1)
-    invalid_argument("Mysql.to_row: offset out of range");
+    caml_invalid_argument("Mysql.to_row: offset out of range");
 
   mysql_data_seek(res, off);
 
@@ -570,13 +572,13 @@ db_escape(value str)
   CAMLlocal1(res);
 
   s = String_val(str);
-  len = string_length(str);
-  buf = (char*) stat_alloc(2*len+1);
+  len = caml_string_length(str);
+  buf = (char*)caml_stat_alloc(2*len+1);
   esclen = mysql_escape_string(buf,s,len);
 
-  res = alloc_string(esclen);
+  res = caml_alloc_string(esclen);
   memcpy(String_val(res), buf, esclen);
-  stat_free(buf);
+  caml_stat_free(buf);
 
   CAMLreturn(res);
 }
@@ -648,19 +650,19 @@ db_size(value result)
   else
     size = (int64_t)mysql_num_rows(res);
 
-  CAMLreturn(copy_int64(size));
+  CAMLreturn(caml_copy_int64(size));
 }
 
 EXTERNAL value
 db_affected(value dbd) {
   CAMLparam1(dbd);
-  CAMLreturn(copy_int64(mysql_affected_rows(DBDmysql(dbd))));
+  CAMLreturn(caml_copy_int64(mysql_affected_rows(DBDmysql(dbd))));
 }
 
 EXTERNAL value
 db_insert_id(value dbd) {
   CAMLparam1(dbd);
-  CAMLreturn(copy_int64(mysql_insert_id(DBDmysql(dbd))));
+  CAMLreturn(caml_copy_int64(mysql_insert_id(DBDmysql(dbd))));
 }
 
 EXTERNAL value
@@ -682,7 +684,7 @@ EXTERNAL value
 db_client_info(value unit) {
   CAMLparam1(unit);
   CAMLlocal1(info);
-  info = copy_string(mysql_get_client_info());
+  info = caml_copy_string(mysql_get_client_info());
   CAMLreturn(info);
 }
 
@@ -690,7 +692,7 @@ EXTERNAL value
 db_host_info(value dbd) {
   CAMLparam1(dbd);
   CAMLlocal1(info);
-  info = copy_string(mysql_get_host_info(DBDmysql(dbd)));
+  info = caml_copy_string(mysql_get_host_info(DBDmysql(dbd)));
   CAMLreturn(info);
 }
 
@@ -698,7 +700,7 @@ EXTERNAL value
 db_server_info(value dbd) {
   CAMLparam1(dbd);
   CAMLlocal1(info);
-  info = copy_string(mysql_get_server_info(DBDmysql(dbd)));
+  info = caml_copy_string(mysql_get_server_info(DBDmysql(dbd)));
   CAMLreturn(info);
 }
 
@@ -775,7 +777,7 @@ make_field(MYSQL_FIELD *f) {
   CAMLparam0();
   CAMLlocal5(out, data, name, table, def);
 
-  name = copy_string(f->name);
+  name = caml_copy_string(f->name);
 
   if (f->table)
     table = val_str_option(f->table, strlen(f->table));
@@ -787,7 +789,7 @@ make_field(MYSQL_FIELD *f) {
   else
     def = Val_none;
 
-  data = alloc_small(7, 0);
+  data = caml_alloc_small(7, 0);
   Field(data, 0) = name;
   Field(data, 1) = table;
   Field(data, 2) = def;
@@ -851,7 +853,7 @@ db_fetch_fields(value result) {
 
   f = mysql_fetch_fields(res);
 
-  fields = alloc_tuple(n);
+  fields = caml_alloc_tuple(n);
 
   for (i = 0; i < n; i++) {
     Store_field(fields, i, make_field(f+i));
@@ -922,7 +924,7 @@ caml_mysql_stmt_prepare(value v_dbd, value v_sql)
     mysqlfailwith(buf);
   }
   caml_leave_blocking_section();
-  res = alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 0, 1);
+  res = caml_alloc_custom(&stmt_ops, sizeof(MYSQL_STMT*), 0, 1);
   STMTval(res) = stmt;
   CAMLreturn(res);
 }
@@ -1125,7 +1127,7 @@ caml_mysql_stmt_execute_gen(value v_stmt, value v_params, int with_null)
       mysqlfailwith("Prepared.execute : mysql_stmt_bind_result");
     }
   }
-  res = alloc_custom(&stmt_result_ops, sizeof(row_t*), 0, 1);
+  res = caml_alloc_custom(&stmt_result_ops, sizeof(row_t*), 0, 1);
   ROWval(res) = row;
   CAMLreturn(res);
 }
@@ -1166,7 +1168,7 @@ caml_mysql_stmt_affected(value stmt)
 {
   CAMLparam1(stmt);
   check_stmt(STMTval(stmt),"affected");
-  CAMLreturn(copy_int64(mysql_stmt_affected_rows(STMTval(stmt))));
+  CAMLreturn(caml_copy_int64(mysql_stmt_affected_rows(STMTval(stmt))));
 }
 
 EXTERNAL value
@@ -1174,7 +1176,7 @@ caml_mysql_stmt_insert_id(value stmt)
 {
   CAMLparam1(stmt);
   check_stmt(STMTval(stmt),"insert_id");
-  CAMLreturn(copy_int64(mysql_stmt_insert_id(STMTval(stmt))));
+  CAMLreturn(caml_copy_int64(mysql_stmt_insert_id(STMTval(stmt))));
 }
 
 EXTERNAL value
@@ -1192,7 +1194,7 @@ caml_mysql_stmt_result_metadata(value stmt)
     CAMLlocal1(res);
 
     check_stmt(STMTval(stmt), "result_metadata");
-    res = alloc_custom(&res_ops, sizeof(MYSQL_RES*), 0, 1);
+    res = caml_alloc_custom(&res_ops, sizeof(MYSQL_RES*), 0, 1);
     RESval(res) = mysql_stmt_result_metadata(STMTval(stmt));
 
     CAMLreturn(res);
