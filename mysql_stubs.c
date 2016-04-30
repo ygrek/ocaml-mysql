@@ -1,12 +1,12 @@
 /*
- * This module provides access to MySQL from Objective Caml. 
+ * This module provides access to MySQL from Objective Caml.
  */
 
- 
+
 #include <stdio.h>              /* sprintf */
-#include <string.h> 
+#include <string.h>
 #include <stdarg.h>
- 
+
 /* OCaml runtime system */
 
 #include <caml/mlvalues.h>
@@ -46,7 +46,7 @@
 #define caml_enter_blocking_section() if (1) { caml_enter_blocking_section(); sleep(1); }
 #endif
 
-/* Abstract types 
+/* Abstract types
  *
  * dbd - data base descriptor
  *
@@ -63,7 +63,7 @@
  */
 
 /* macros to access C values stored inside the abstract values */
- 
+
 #define DBDmysql(x) ((MYSQL*)(Field(x,1)))
 #define DBDopen(x) (Field(x,2))
 #define RESval(x) (*(MYSQL_RES**)Data_custom_val(x))
@@ -125,7 +125,7 @@ strdup_option(value v)
 {
   if (v == Val_none)
     return (char*) NULL;
-  else 
+  else
     return strdup(String_val(Some_val(v)));
 }
 
@@ -133,7 +133,7 @@ strdup_option(value v)
  * val_str_option creates a string option value from a char* (NONE for
  * NULL) -- dual to str_option().
  */
- 
+
 static value
 val_str_option(const char* s, unsigned long length)
 {
@@ -158,7 +158,7 @@ val_str_option(const char* s, unsigned long length)
 static inline MYSQL*
 check_db(value dbd, const char *fun)
 {
-  if (!Bool_val(DBDopen(dbd))) 
+  if (!Bool_val(DBDopen(dbd)))
     mysqlfailmsg("Mysql.%s called with closed connection", fun);
   return DBDmysql(dbd);
 }
@@ -167,7 +167,7 @@ check_db(value dbd, const char *fun)
 static void
 conn_finalize(value dbd)
 {
-  if (Bool_val(DBDopen(dbd))) 
+  if (Bool_val(DBDopen(dbd)))
   {
     MYSQL* db = DBDmysql(dbd);
     caml_enter_blocking_section();
@@ -184,7 +184,7 @@ static unsigned int ml_mysql_protocol_type[] = {
   MYSQL_PROTOCOL_DEFAULT, MYSQL_PROTOCOL_TCP, MYSQL_PROTOCOL_SOCKET,
   MYSQL_PROTOCOL_PIPE, MYSQL_PROTOCOL_MEMORY
 };
- 
+
 #define SET_OPTION(option, p) if (0 != mysql_options(init,MYSQL_##option,p)) mysqlfailwith( "MYSQL_" #option ); break
 #define SET_OPTION_BOOL(option) option_bool = Bool_val(v); SET_OPTION(option, &option_bool)
 #define SET_OPTION_INT(option) option_int = Int_val(v); SET_OPTION(option, &option_int)
@@ -210,13 +210,13 @@ db_connect(value options, value args)
   unsigned long client_flag = 0;
 
   init = mysql_init(NULL);
-  if (!init) 
+  if (!init)
   {
     mysqlfailwith("connect failed");
-  } 
-  else 
+  }
+  else
   {
-    while (options != Val_emptylist) 
+    while (options != Val_emptylist)
     {
       if (Is_block(Field(options,0)))
       {
@@ -270,11 +270,11 @@ db_connect(value options, value args)
 
     free(host); free(db); free(pwd); free(user); free(socket);
 
-    if (!mysql) 
+    if (!mysql)
     {
       mysqlfailwith((char*)mysql_error(init));
     }
-    else 
+    else
     {
       res = alloc_final(3, conn_finalize, 0, 1);
       Field(res, 1) = (value)mysql;
@@ -286,7 +286,7 @@ db_connect(value options, value args)
 
 
 EXTERNAL value
-db_change_user(value v_dbd, value args) 
+db_change_user(value v_dbd, value args)
 {
   char *db;
   char *pwd;
@@ -332,7 +332,7 @@ db_list_dbs(value v_dbd, value pattern, value blah)
 
   n = mysql_num_rows(res);
 
-  if (n == 0) 
+  if (n == 0)
   {
     mysql_free_result(res);
     CAMLreturn(Val_none);
@@ -340,7 +340,7 @@ db_list_dbs(value v_dbd, value pattern, value blah)
 
   dbs = alloc_tuple(n); /* Array */
   i = 0;
-  while ((row = mysql_fetch_row(res)) != NULL) 
+  while ((row = mysql_fetch_row(res)) != NULL)
   {
     Store_field(dbs, i, copy_string(row[0]));
     i++;
@@ -357,7 +357,7 @@ db_select_db(value v_dbd, value v_newdb)
   MYSQL* mysql = check_db(v_dbd, "select_db");
   char* newdb = strdup(String_val(v_newdb));
   my_bool ret;
- 
+
   caml_enter_blocking_section();
   ret = mysql_select_db(mysql, newdb);
   caml_leave_blocking_section();
@@ -394,7 +394,7 @@ db_ping(value dbd)
   MYSQL* db = check_db(dbd,"ping");
 
   caml_enter_blocking_section();
-  if (mysql_ping(db)) 
+  if (mysql_ping(db))
   {
     caml_leave_blocking_section();
     mysqlfailmsg("Mysql.ping: %s", mysql_error(db));
@@ -464,10 +464,10 @@ db_exec(value v_dbd, value v_sql)
   CAMLreturn(res);
 }
 
-/* 
+/*
  * db_fetch -- fetch one result tuple, represented as array of string
- * options.  In case a value is Null, the respective value is None. 
- * Returns (Some v) in case there is such a result and None otherwise. 
+ * options.  In case a value is Null, the respective value is None.
+ * Returns (Some v) in case there is such a result and None otherwise.
  * Moves the internal result cursor to the next tuple.
  */
 
@@ -480,28 +480,28 @@ db_fetch (value result)
   unsigned long *length;  /* array of long */
   MYSQL_RES *res;
   MYSQL_ROW row;
-  
+
   res = RESval(result);
-  if (!res) 
+  if (!res)
     mysqlfailwith("Mysql.fetch: result did not return fetchable data");
-  
+
   n = mysql_num_fields(res);
   if (n == 0)
     mysqlfailwith("Mysql.fetch: no columns");
-  
+
   row = mysql_fetch_row(res);
-  if (!row) 
+  if (!row)
     CAMLreturn(Val_none);
-  
+
   /* create Some([| f1; f2; .. ;fn |]) */
-  
+
   length = mysql_fetch_lengths(res);      /* length[] */
   fields = alloc_tuple(n);                    /* array */
   for (i=0;i<n;i++) {
     s = val_str_option(row[i], length[i]);
     Store_field(fields, i, s);
   }
-  
+
   CAMLreturn(Val_some(fields));
 }
 
@@ -557,7 +557,7 @@ db_errmsg(value dbd)
  * db_escape - takes a string and escape all characters inside which
  * must be escaped inside MySQL strings.  This helps to construct SQL
  * statements easily.  Simply returns the new string including the
- * quotes. 
+ * quotes.
  */
 
 EXTERNAL value
@@ -568,7 +568,7 @@ db_escape(value str)
   char *buf;
   int len, esclen;
   CAMLlocal1(res);
-        
+
   s = String_val(str);
   len = string_length(str);
   buf = (char*) stat_alloc(2*len+1);
@@ -577,7 +577,7 @@ db_escape(value str)
   res = alloc_string(esclen);
   memcpy(String_val(res), buf, esclen);
   stat_free(buf);
-  
+
   CAMLreturn(res);
 }
 
@@ -596,8 +596,8 @@ db_real_escape(value dbd, value str)
   s = String_val(str);
   len = caml_string_length(str);
   buf = (char*)caml_stat_alloc(2*len+1);
-  /* 
-   * mysql_real_escape doesn't perform network I/O, 
+  /*
+   * mysql_real_escape doesn't perform network I/O,
    * so no need for blocking section (and extra copying)
    * */
   esclen = mysql_real_escape_string(mysql,buf,s,len);
@@ -674,7 +674,7 @@ db_fields(value result)
     size = 0;
   else
     size = (long)(mysql_num_fields(res));
-  
+
   return Val_long(size);
 }
 
@@ -759,18 +759,18 @@ type2dbty (int type)
     {-1 /*default*/         , Val_long(UNKNOWN_TY)}
   };
   int i;
-  
+
   /* in principle using bsearch() would be better -- but how can
    * we know that the left side of the map is properly sorted? 
    */
 
   for (i=0; map[i].mysql != -1 && map[i].mysql != type; i++)
     /* empty */ ;
-  
+
   return map[i].caml;
 }
 
-value 
+value
 make_field(MYSQL_FIELD *f) {
   CAMLparam0();
   CAMLlocal5(out, data, name, table, def);
@@ -863,7 +863,7 @@ db_fetch_fields(value result) {
 static void
 check_stmt(MYSQL_STMT* stmt, char *fun)
 {
-  if (!stmt) 
+  if (!stmt)
     mysqlfailmsg("Mysql.Prepared.%s called with closed statement", fun);
 }
 
@@ -1197,4 +1197,3 @@ caml_mysql_stmt_result_metadata(value stmt)
 
     CAMLreturn(res);
 }
-
