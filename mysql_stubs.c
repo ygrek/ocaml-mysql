@@ -846,6 +846,9 @@ db_fetch_fields(value result) {
   MYSQL_FIELD *f;
   int i, n;
 
+  if (!res)
+    CAMLreturn(Val_none);
+
   n = mysql_num_fields(res);
 
   if (n == 0)
