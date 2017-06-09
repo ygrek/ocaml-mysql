@@ -4,7 +4,7 @@ SOURCES=mysql.mli mysql.ml mysql_stubs.c
 RESULT=mysql
 VERSION=@PACKAGE_VERSION@
 
-LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
+LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *cmxs *.a *.so)
 
 CFLAGS=@CFLAGS@ @DEFS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
@@ -15,7 +15,7 @@ export OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 
 build: all opt
 all: byte-code-library 
-opt: native-code-library
+opt: native-code-library mysql.cmxs
 reallyall: byte-code-library native-code-library htdoc
 install: libinstall
 uninstall: libuninstall
@@ -26,8 +26,14 @@ demos: reallyall
 	ocamlc -custom -I . -thread unix.cma threads.cma mysql.cma demo2.ml -o demo2.byte
 	ocamlopt -I . -thread unix.cmxa threads.cmxa mysql.cmxa demo2.ml -o demo2.native
 
+mysql.cmxs: mysql.cmx
+	ocamlopt -shared -ccopt -L/usr/lib mysql_stubs.o -cclib -lmysqlclient -o mysql.cmxs mysql.cmx
+
 clean-demos:
 	rm -f demo*.{byte,native,cm*,o}
+
+clean::
+	rm -f mysql.cmxs
 
 cleanall: clean-demos clean-doc clean
 
