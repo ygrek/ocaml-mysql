@@ -4,7 +4,7 @@ SOURCES=mysql.mli mysql.ml mysql_stubs.c
 RESULT=mysql
 VERSION=@PACKAGE_VERSION@
 
-LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *cmxs *.a *.so)
+LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
 
 CFLAGS=@CFLAGS@ @DEFS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
@@ -13,10 +13,20 @@ LDFLAGS=@LDFLAGS@
 export OCAMLMKLIB_FLAGS=@LDFLAGS@
 export OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 
+can_natdynlink := $(shell sh -c 'grep -q "NATDYNLINK=true" $$(ocamlc -where)/Makefile.config; echo $$?')
+
 build: all opt
-all: byte-code-library 
+all: byte-code-library
+
+ifeq (${can_natdynlink},0)
+LIBINSTALL_FILES+=$(wildcard *.cmxs)
 opt: native-code-library mysql.cmxs
+reallyall: byte-code-library native-code-library mysql.cmxs htdoc
+else
+opt: native-code-library
 reallyall: byte-code-library native-code-library htdoc
+endif
+
 install: libinstall
 uninstall: libuninstall
 
