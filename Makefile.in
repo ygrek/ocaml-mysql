@@ -30,12 +30,12 @@ uninstall: libuninstall
 
 demos: reallyall
 	ocamlc -custom -I . mysql.cma demo.ml -o demo.byte
-	ocamlopt -I . mysql.cmxa demo.ml -o demo.native
+	$(OCAMLOPT) -I . mysql.cmxa demo.ml -o demo.native
 	ocamlc -custom -I . -thread unix.cma threads.cma mysql.cma demo2.ml -o demo2.byte
-	ocamlopt -I . -thread unix.cmxa threads.cmxa mysql.cmxa demo2.ml -o demo2.native
+	$(OCAMLOPT) -I . -thread unix.cmxa threads.cmxa mysql.cmxa demo2.ml -o demo2.native
 
 mysql.cmxs: mysql.cmx
-	ocamlopt -shared -ccopt -L/usr/lib mysql_stubs.o -cclib -lmysqlclient -o mysql.cmxs mysql.cmx
+	$(OCAMLOPT) -shared $(foreach flag,@LDFLAGS@, -ccopt ${flag}) mysql_stubs.o $(foreach lib,@LIBS@, -cclib ${lib}) -o mysql.cmxs mysql.cmx
 
 clean-demos:
 	rm -f demo*.{byte,native,cm*,o}
