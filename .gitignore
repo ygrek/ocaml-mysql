@@ -11,7 +11,7 @@ autom4te.cache
 *.byte
 *.native
 *.cm[aiox]
-*.cmxa
+*.cmx[as]
 *.o
 *.obj
 *.so
