@@ -5,6 +5,11 @@ AC_CHECK_PROG(ocamlc,ocamlc,ocamlc)
 AC_CHECK_PROG(ocamlopt,ocamlopt,ocamlopt)
 AC_CHECK_PROG(ocamlfind,ocamlfind,ocamlfind)
 
+AC_MSG_CHECKING([whether ocamlopt supports natdynlink])
+AS_IF([`grep -q "NATDYNLINK=true" $(ocamlc -where)/Makefile.config`],[CAN_NATDYNLINK=yes],[CAN_NATDYNLINK=no])
+AC_MSG_RESULT([$CAN_NATDYNLINK])
+AC_SUBST(CAN_NATDYNLINK)
+
 AC_PROG_INSTALL
 AC_SUBST(INSTALL)
 

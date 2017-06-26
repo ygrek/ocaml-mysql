@@ -13,13 +13,14 @@ LDFLAGS=@LDFLAGS@
 export OCAMLMKLIB_FLAGS=@LDFLAGS@
 export OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 
-can_natdynlink := $(shell sh -c 'grep -q "NATDYNLINK=true" $$(ocamlc -where)/Makefile.config; echo $$?')
-
 build: all opt
 all: byte-code-library
 
-ifeq (${can_natdynlink},0)
+ifeq (@CAN_NATDYNLINK@,yes)
 CMXS=mysql.cmxs
+
+clean::
+	rm -f mysql.cmxs
 endif
 
 opt: native-code-library $(CMXS)
@@ -39,9 +40,6 @@ mysql.cmxs: mysql.cmx
 
 clean-demos:
 	rm -f demo*.{byte,native,cm*,o}
-
-clean::
-	rm -f mysql.cmxs
 
 cleanall: clean-demos clean-doc clean
 
