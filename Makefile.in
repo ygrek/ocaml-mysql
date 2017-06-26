@@ -4,7 +4,7 @@ SOURCES=mysql.mli mysql.ml mysql_stubs.c
 RESULT=mysql
 VERSION=@PACKAGE_VERSION@
 
-LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so)
+LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so *.cmxs)
 
 CFLAGS=@CFLAGS@ @DEFS@ -Wall -Wextra
 CLIBS=$(foreach lib, @LIBS@, $(subst -l,,${lib}))
@@ -19,13 +19,11 @@ build: all opt
 all: byte-code-library
 
 ifeq (${can_natdynlink},0)
-LIBINSTALL_FILES+=$(wildcard *.cmxs)
-opt: native-code-library mysql.cmxs
-reallyall: byte-code-library native-code-library mysql.cmxs htdoc
-else
-opt: native-code-library
-reallyall: byte-code-library native-code-library htdoc
+CMXS=mysql.cmxs
 endif
+
+opt: native-code-library $(CMXS)
+reallyall: byte-code-library native-code-library $(CMXS) htdoc
 
 install: libinstall
 uninstall: libuninstall
