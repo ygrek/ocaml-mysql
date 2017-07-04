@@ -24,18 +24,16 @@ MYSQL_INCLUDE=`mysql_config --include`
 AS_IF([ test "$?" -eq 0 ],[CPPFLAGS="$MYSQL_INCLUDE $CPPFLAGS"],)
 AC_MSG_RESULT([$MYSQL_INCLUDE])
 
-AC_MSG_CHECKING([for mysql_config pkglibdir])
-MYSQL_LIBDIR=`mysql_config --variable=pkglibdir`
-AS_IF([ test "$?" -eq 0 ],[LDFLAGS="-L$MYSQL_LIBDIR $LDFLAGS"],)
-AC_MSG_RESULT([$MYSQL_LIBDIR])
+AC_MSG_CHECKING([for mysql_config libs])
+MYSQL_LINK_FLAGS=`mysql_config --libs`
+AS_IF([ test "$?" -eq 0 ],[LDFLAGS="$MYSQL_LINK_FLAGS $LDFLAGS"],)
+AC_MSG_RESULT([$MYSQL_LINK_FLAGS])
+AC_SUBST(MYSQL_LINK_FLAGS)
 
-AC_CHECKING([for MySQL library])
-AC_CHECK_LIB(mysqlclient, mysql_real_connect, [], [AC_MSG_ERROR([MySQL client library not found])])
-
-AC_CHECKING([for MySQL header files])
-AC_CHECK_HEADERS([mysql.h mysql/mysql.h mysql.h], [break])
+AC_CHECKING([for mysql.h])
+AC_CHECK_HEADERS([mysql.h mysql/mysql.h], [break])
 if test "$ac_cv_header_mysql_mysql_h" != "yes" -a "$ac_cv_header_mysql_h" != "yes"; then
-    AC_MSG_ERROR([MySQL headers not found])
+    AC_MSG_ERROR([mysql.h not found])
 fi
 
 AC_CONFIG_HEADERS([config.h])
