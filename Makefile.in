@@ -8,8 +8,8 @@ LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmx *.cmxa *.a *.so *.cmxs)
 
 CFLAGS=@CFLAGS@ @DEFS@ -Wall -Wextra
 CPPFLAGS=@CPPFLAGS@
-CLIBS=$(foreach x, $(filter -l%, @MYSQL_LINK_FLAGS@), $(patsubst -l%,%,${x}))
-LDFLAGS=$(filter-out -l%, @MYSQL_LINK_FLAGS@)
+CLIBS=$(foreach x, $(filter -l%, @LDFLAGS@), $(patsubst -l%,%,${x}))
+LDFLAGS=$(filter-out -l%, @LDFLAGS@)
 OCAMLMKLIB_FLAGS=$(LDFLAGS)
 OCAMLFIND_INSTFLAGS=-patch-version "$(VERSION)"
 

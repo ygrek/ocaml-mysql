@@ -620,7 +620,6 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-MYSQL_LINK_FLAGS
 EGREP
 GREP
 CPP
@@ -3426,7 +3425,6 @@ if  test "$?" -eq 0 ; then :
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MYSQL_LINK_FLAGS" >&5
 $as_echo "$MYSQL_LINK_FLAGS" >&6; }
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql.h..." >&5
 $as_echo "$as_me: checking for mysql.h..." >&6;}

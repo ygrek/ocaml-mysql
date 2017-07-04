@@ -28,7 +28,6 @@ AC_MSG_CHECKING([for mysql_config libs])
 MYSQL_LINK_FLAGS=`mysql_config --libs`
 AS_IF([ test "$?" -eq 0 ],[LDFLAGS="$MYSQL_LINK_FLAGS $LDFLAGS"],)
 AC_MSG_RESULT([$MYSQL_LINK_FLAGS])
-AC_SUBST(MYSQL_LINK_FLAGS)
 
 AC_CHECKING([for mysql.h])
 AC_CHECK_HEADERS([mysql.h mysql/mysql.h], [break])
