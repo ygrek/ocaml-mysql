@@ -1,3 +1,7 @@
+* Thu Sep 21 2017 (1.2.2)
+  * Build and install cmxs
+  * Support build with libmariadbclient
+
 * Sat Jul 23 2016 (1.2.1)
   * Fix crash in fetch_fields
   * Fix build with OCaml 4.03
