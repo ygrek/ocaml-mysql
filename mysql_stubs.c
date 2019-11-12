@@ -286,6 +286,13 @@ db_connect(value options, value args)
   CAMLreturn(res);
 }
 
+EXTERNAL value
+db_library_init(value v_unit)
+{
+  mysql_library_init(0,NULL,NULL);
+  return Val_unit;
+}
+
 
 EXTERNAL value
 db_change_user(value v_dbd, value args)

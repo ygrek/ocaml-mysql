@@ -34,6 +34,7 @@ let fail  msg   = raise (Failure msg)
 type dbd        (* database connection handle *)
 type result     (* handle to access result from query *)
 
+external init : unit -> unit = "db_library_init"
 
 (* Do not change any type definition that is used by external functions 
    without changing the C source code accordingly! *)
@@ -356,7 +357,10 @@ external ping       : dbd -> unit                           = "db_ping"
 external exec       : dbd -> string -> result               = "db_exec"
 external real_status     : dbd -> int                         = "db_status"
 external errmsg     : dbd -> string option                  = "db_errmsg"
-external escape     : string -> string                      = "db_escape"
+external db_escape  : string -> string                      = "db_escape"
+let escape s =
+  init (); (* libmariadb crashes without init *)
+  db_escape s
 external real_escape: dbd -> string -> string               = "db_real_escape"
 external set_charset: dbd -> string -> unit                 = "db_set_charset"
 external fetch      : result -> string option array option  = "db_fetch" 
@@ -365,7 +369,7 @@ external size       : result -> int64                         = "db_size"
 external affected    : dbd -> int64                           = "db_affected"
 external insert_id: dbd -> int64 = "db_insert_id"
 external fields     : result -> int                         = "db_fields"
-external client_info : unit -> string = "db_client_info"
+external client_info : unit -> string = "db_client_info" (* works without init *)
 external host_info   : dbd -> string = "db_host_info"
 external server_info : dbd -> string = "db_server_info"
 external proto_info  : dbd -> int    = "db_proto_info"

@@ -76,6 +76,12 @@ type db_option =
                                         on Windows, if the server supports shared-memory connections *)
 | OPT_FOUND_ROWS  (** Return the number of found (matched) rows, not the number of changed rows. *)
 
+(**
+  Initialize library (in particular initializes default character set for {!escape} NB it is recommended to always use {!real_escape})
+  NB init is called automatically when db handle is created
+*)
+val init : unit -> unit
+
 (** [connect ?options db] connects to the database [db] and returns a handle for further use
    @param options connection specific options, default empty list
 *)
