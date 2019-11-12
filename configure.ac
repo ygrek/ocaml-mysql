@@ -20,16 +20,16 @@ AC_CHECKING([for C header files])
 AC_HEADER_STDC()
 
 AC_MSG_CHECKING([for mysql_config include])
-MYSQL_INCLUDE=`mysql_config --include`
+# pkg-config as last resort because debian buster pkg-config flags are wrong
+MYSQL_INCLUDE=`mysql_config --include || mariadb_config --include || pkg-config mariadb --cflags`
 AS_IF([ test "$?" -eq 0 ],[CPPFLAGS="$MYSQL_INCLUDE $CPPFLAGS"],)
 AC_MSG_RESULT([$MYSQL_INCLUDE])
 
 AC_MSG_CHECKING([for mysql_config libs])
-MYSQL_LINK_FLAGS=`mysql_config --libs`
+MYSQL_LINK_FLAGS=`mysql_config --libs || mariadb_config --libs || pkg-config mariadb --libs`
 AS_IF([ test "$?" -eq 0 ],[LDFLAGS="$MYSQL_LINK_FLAGS $LDFLAGS"],)
 AC_MSG_RESULT([$MYSQL_LINK_FLAGS])
 
-AC_CHECKING([for mysql.h])
 AC_CHECK_HEADERS([mysql.h mysql/mysql.h], [break])
 if test "$ac_cv_header_mysql_mysql_h" != "yes" -a "$ac_cv_header_mysql_h" != "yes"; then
     AC_MSG_ERROR([mysql.h not found])

@@ -3410,7 +3410,8 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql_config include" >&5
 $as_echo_n "checking for mysql_config include... " >&6; }
-MYSQL_INCLUDE=`mysql_config --include`
+# pkg-config as last resort because debian buster pkg-config flags are wrong
+MYSQL_INCLUDE=`mysql_config --include || mariadb_config --include || pkg-config mariadb --cflags`
 if  test "$?" -eq 0 ; then :
   CPPFLAGS="$MYSQL_INCLUDE $CPPFLAGS"
 fi
@@ -3419,15 +3420,13 @@ $as_echo "$MYSQL_INCLUDE" >&6; }
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql_config libs" >&5
 $as_echo_n "checking for mysql_config libs... " >&6; }
-MYSQL_LINK_FLAGS=`mysql_config --libs`
+MYSQL_LINK_FLAGS=`mysql_config --libs || mariadb_config --libs || pkg-config mariadb --libs`
 if  test "$?" -eq 0 ; then :
   LDFLAGS="$MYSQL_LINK_FLAGS $LDFLAGS"
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MYSQL_LINK_FLAGS" >&5
 $as_echo "$MYSQL_LINK_FLAGS" >&6; }
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql.h..." >&5
-$as_echo "$as_me: checking for mysql.h..." >&6;}
 # On IRIX 5.3, sys/types and inttypes.h are conflicting.
 for ac_header in sys/types.h sys/stat.h stdlib.h string.h memory.h strings.h \
 		  inttypes.h stdint.h unistd.h
