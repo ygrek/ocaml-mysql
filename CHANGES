@@ -1,3 +1,6 @@
+* Tue Nov 12 2019 (1.2.4)
+  * Auto-initialize library in Mysql.escape
+
 * Tue Nov 12 2019 (1.2.3)
   * Support build with libmariadb (using mariadb_config)
 
