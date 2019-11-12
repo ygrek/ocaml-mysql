@@ -1,4 +1,4 @@
-AC_INIT(ocaml-mysql,1.2.2)
+AC_INIT(ocaml-mysql,1.2.3)
 
 AC_CHECKING([for ocaml compiler and tools])
 AC_CHECK_PROG(ocamlc,ocamlc,ocamlc)
