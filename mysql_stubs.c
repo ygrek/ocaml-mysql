@@ -437,6 +437,9 @@ struct custom_operations res_ops = {
 #if defined(custom_compare_ext_default)
   custom_compare_ext_default,
 #endif
+#if defined(custom_fixed_length_default)
+  custom_fixed_length_default,
+#endif
 };
 
 /*
@@ -900,6 +903,9 @@ struct custom_operations stmt_ops = {
 #if defined(custom_compare_ext_default)
   custom_compare_ext_default,
 #endif
+#if defined(custom_fixed_length_default)
+  custom_fixed_length_default,
+#endif
 };
 
 
@@ -1072,6 +1078,9 @@ struct custom_operations stmt_result_ops = {
   custom_deserialize_default,
 #if defined(custom_compare_ext_default)
   custom_compare_ext_default,
+#endif
+#if defined(custom_fixed_length_default)
+  custom_fixed_length_default,
 #endif
 };
 
