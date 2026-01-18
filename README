@@ -1,9 +1,11 @@
+NB the project is not maintained and likely unsafe to use with OCaml 5, see https://github.com/ygrek/ocaml-mysql/issues/18
+   you probably want to use https://github.com/ocaml-community/ocaml-mariadb instead
 
                      OCaml-MySQL -- MySQL access for OCaml
                      *************************************
 
-                    http://ocaml-mysql.forge.ocamlcore.org/
-                    =======================================
+                      https://github.com/ygrek/ocaml-mysql
+                      ====================================
                              Based on a release by:
                                   Shawn Wagner
                               shawnw@speakeasy.org
