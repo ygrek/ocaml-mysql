@@ -1173,7 +1173,11 @@ caml_mysql_stmt_fetch(value result)
   caml_enter_blocking_section();
   res = mysql_stmt_fetch(r->stmt);
   caml_leave_blocking_section();
-  if (0 != res && MYSQL_DATA_TRUNCATED != res) CAMLreturn(Val_none);
+
+  if (MYSQL_DATA_TRUNCATED == res)
+    mysqlfailwith("Mysql.stmt_fetch: query results truncated");
+
+  if (0 != res) CAMLreturn(Val_none);
   arr = caml_alloc(r->count,0);
   for (i = 0; i < r->count; i++)
   {
